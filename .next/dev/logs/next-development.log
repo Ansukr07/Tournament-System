@@ -1,0 +1,89 @@
+[00:00:01.473] Server  LOG      ✓ Ready in 965ms
+[00:00:04.551] Server  LOG      ○ Compiling /admin/create-event ...
+[00:00:06.686] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:06.774] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:06.790] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:07.201] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[00:00:07.201] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/admin/create-event","route":"/admin/create-event"}
+[00:00:07.201] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/admin/create-event color: rgb(120, 120, 120) color: inherit {"dp":"/admin/create-event","o":"http://localhost:3000/admin/create-event","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763666203725}
+[00:00:08.191] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[00:00:08.191] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/admin/create-event","route":"/admin/create-event"}
+[00:00:08.191] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/admin/create-event color: rgb(120, 120, 120) color: inherit {"dp":"/admin/create-event","o":"http://localhost:3000/admin/create-event","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763666203871}
+[00:00:08.196] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[00:00:08.196] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/admin/create-event","route":"/admin/create-event"}
+[00:00:08.196] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/admin/create-event color: rgb(120, 120, 120) color: inherit {"dp":"/admin/create-event","o":"http://localhost:3000/admin/create-event","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763666203938}
+[00:01:42.713] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:42.875] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[00:01:42.875] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/admin/create-event","route":"/admin/create-event"}
+[00:01:42.875] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/admin/create-event color: rgb(120, 120, 120) color: inherit {"dp":"/admin/create-event","o":"http://localhost:3000/admin/create-event","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763666299521}
+[00:01:57.684] Browser ERROR   [v0] Error creating event: {"message":"{\"message\":\"No token, authorization denied\"}"}
+[00:05:19.116] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:05:19.371] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[00:05:19.371] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/admin/create-event","route":"/admin/create-event"}
+[00:05:19.371] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/admin/create-event color: rgb(120, 120, 120) color: inherit {"dp":"/admin/create-event","o":"http://localhost:3000/admin/create-event","sdkn":"@vercel/analytics/next","sdkv":"1.5.0","sv":"0.1.3","ts":1763666516019}
+[00:06:49.191] Browser ERROR   ./lib/api.ts:4:14
+Ecmascript file had an error
+  2 | import { api } from "@/lib/api";
+  3 |
+> 4 | export const api = {
+    |              ^^^
+  5 |   // ---------------- AUTH ----------------
+  6 |   auth: {
+  7 |     signup: (email: string, password: string, role: string) =>
+
+the name `api` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./lib/api.ts [Client Component Browser]
+    ./app/admin/create-event/page.tsx [Client Component Browser]
+    ./app/admin/create-event/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/api.ts [Client Component SSR]
+    ./app/admin/create-event/page.tsx [Client Component SSR]
+    ./app/admin/create-event/page.tsx [Server Component]
+[00:06:49.192] Browser ERROR   ./lib/api.ts:4:14
+Ecmascript file had an error
+  2 | import { api } from "@/lib/api";
+  3 |
+> 4 | export const api = {
+    |              ^^^
+  5 |   // ---------------- AUTH ----------------
+  6 |   auth: {
+  7 |     signup: (email: string, password: string, role: string) =>
+
+the name `api` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./lib/api.ts [Client Component Browser]
+    ./app/admin/create-event/page.tsx [Client Component Browser]
+    ./app/admin/create-event/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/api.ts [Client Component SSR]
+    ./app/admin/create-event/page.tsx [Client Component SSR]
+    ./app/admin/create-event/page.tsx [Server Component]
+[00:06:49.192] Browser ERROR   ./lib/api.ts:4:14
+Ecmascript file had an error
+  2 | import { api } from "@/lib/api";
+  3 |
+> 4 | export const api = {
+    |              ^^^
+  5 |   // ---------------- AUTH ----------------
+  6 |   auth: {
+  7 |     signup: (email: string, password: string, role: string) =>
+
+the name `api` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./lib/api.ts [Client Component Browser]
+    ./app/admin/create-event/page.tsx [Client Component Browser]
+    ./app/admin/create-event/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./lib/api.ts [Client Component SSR]
+    ./app/admin/create-event/page.tsx [Client Component SSR]
+    ./app/admin/create-event/page.tsx [Server Component]
