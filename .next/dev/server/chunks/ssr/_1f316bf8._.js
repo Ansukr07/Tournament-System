@@ -333,9 +333,9 @@ __turbopack_context__.s([
     "api",
     ()=>api
 ]);
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE = "http://localhost:5000/api";
 const api = {
-    // Auth
+    // ---------------- AUTH ----------------
     auth: {
         signup: (email, password, role)=>fetch(`${API_BASE}/auth/signup`, {
                 method: "POST",
@@ -346,15 +346,15 @@ const api = {
                     email,
                     password,
                     role
-                })
+                }),
+                credentials: "include",
+                mode: "cors"
             }).then(async (r)=>{
                 if (!r.ok) {
                     const text = await r.text();
                     try {
-                        const json = JSON.parse(text);
-                        throw json;
+                        throw JSON.parse(text);
                     } catch  {
-                        // not JSON, send string message
                         throw {
                             message: text || `Request failed with status ${r.status}`
                         };
@@ -370,15 +370,15 @@ const api = {
                 body: JSON.stringify({
                     email,
                     password
-                })
+                }),
+                credentials: "include",
+                mode: "cors"
             }).then(async (r)=>{
                 if (!r.ok) {
                     const text = await r.text();
                     try {
-                        const json = JSON.parse(text);
-                        throw json;
+                        throw JSON.parse(text);
                     } catch  {
-                        // not JSON, send string message
                         throw {
                             message: text || `Request failed with status ${r.status}`
                         };
@@ -387,7 +387,7 @@ const api = {
                 return r.json();
             })
     },
-    // Players
+    // ---------------- PLAYERS ----------------
     players: {
         create: (name, clubName)=>fetch(`${API_BASE}/players`, {
                 method: "POST",
@@ -397,55 +397,89 @@ const api = {
                 body: JSON.stringify({
                     name,
                     clubName
-                })
+                }),
+                credentials: "include",
+                mode: "cors"
             }).then((r)=>r.json()),
-        list: ()=>fetch(`${API_BASE}/players`).then((r)=>r.json()),
-        byEvent: (eventId)=>fetch(`${API_BASE}/players/event/${eventId}`).then((r)=>r.json())
+        list: ()=>fetch(`${API_BASE}/players`, {
+                credentials: "include",
+                mode: "cors"
+            }).then((r)=>r.json()),
+        byEvent: (eventId)=>fetch(`${API_BASE}/players/event/${eventId}`, {
+                credentials: "include",
+                mode: "cors"
+            }).then((r)=>r.json())
     },
-    // Events
+    // ---------------- EVENTS ----------------
     events: {
         create: (data, token)=>fetch(`${API_BASE}/events`, {
                 method: "POST",
+                credentials: "include",
+                mode: "cors",
                 headers: {
                     "Content-Type": "application/json",
-                    ...token ? {
-                        Authorization: `Bearer ${token}`
-                    } : {}
+                    Authorization: token ? `Bearer ${token}` : ""
                 },
                 body: JSON.stringify(data)
             }).then(async (r)=>{
                 if (!r.ok) {
-                    const error = await r.json();
-                    throw error;
+                    const text = await r.text();
+                    try {
+                        throw JSON.parse(text);
+                    } catch  {
+                        throw {
+                            message: text
+                        };
+                    }
                 }
                 return r.json();
             }),
-        list: ()=>fetch(`${API_BASE}/events`).then((r)=>r.json()),
-        get: (id)=>fetch(`${API_BASE}/events/${id}`).then((r)=>r.json()),
-        getMatches: (eventId)=>fetch(`${API_BASE}/events/${eventId}/matches`).then((r)=>r.json()),
+        list: ()=>fetch(`${API_BASE}/events`, {
+                credentials: "include",
+                mode: "cors"
+            }).then((r)=>r.json()),
+        get: (id)=>fetch(`${API_BASE}/events/${id}`, {
+                credentials: "include",
+                mode: "cors"
+            }).then((r)=>r.json()),
+        getMatches: (eventId)=>fetch(`${API_BASE}/events/${eventId}/matches`, {
+                credentials: "include",
+                mode: "cors"
+            }).then((r)=>r.json()),
         generateFixtures: (eventId, token)=>fetch(`${API_BASE}/events/${eventId}/generate-fixtures`, {
                 method: "POST",
+                credentials: "include",
+                mode: "cors",
                 headers: {
+                    "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 }
             }).then((r)=>r.json()),
         schedule: (eventId, token)=>fetch(`${API_BASE}/events/${eventId}/schedule`, {
                 method: "POST",
+                credentials: "include",
+                mode: "cors",
                 headers: {
+                    "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 }
             }).then((r)=>r.json())
     },
-    // Matches
+    // ---------------- MATCHES ----------------
     matches: {
         generateCode: (matchId, token)=>fetch(`${API_BASE}/matches/${matchId}/generate-code`, {
                 method: "POST",
+                credentials: "include",
+                mode: "cors",
                 headers: {
+                    "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 }
             }).then((r)=>r.json()),
         verifyCode: (matchId, code)=>fetch(`${API_BASE}/matches/${matchId}/verify-code`, {
                 method: "POST",
+                credentials: "include",
+                mode: "cors",
                 headers: {
                     "Content-Type": "application/json"
                 },
@@ -455,6 +489,8 @@ const api = {
             }).then((r)=>r.json()),
         submitScore: (matchId, winnerId, token)=>fetch(`${API_BASE}/matches/${matchId}/submit-score`, {
                 method: "POST",
+                credentials: "include",
+                mode: "cors",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`

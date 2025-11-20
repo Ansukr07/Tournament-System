@@ -333,9 +333,9 @@ __turbopack_context__.s([
     "api",
     ()=>api
 ]);
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE = "http://localhost:5000/api";
 const api = {
-    // Auth
+    // ---------------- AUTH ----------------
     auth: {
         signup: (email, password, role)=>fetch(`${API_BASE}/auth/signup`, {
                 method: "POST",
@@ -346,15 +346,15 @@ const api = {
                     email,
                     password,
                     role
-                })
+                }),
+                credentials: "include",
+                mode: "cors"
             }).then(async (r)=>{
                 if (!r.ok) {
                     const text = await r.text();
                     try {
-                        const json = JSON.parse(text);
-                        throw json;
+                        throw JSON.parse(text);
                     } catch  {
-                        // not JSON, send string message
                         throw {
                             message: text || `Request failed with status ${r.status}`
                         };
@@ -370,15 +370,15 @@ const api = {
                 body: JSON.stringify({
                     email,
                     password
-                })
+                }),
+                credentials: "include",
+                mode: "cors"
             }).then(async (r)=>{
                 if (!r.ok) {
                     const text = await r.text();
                     try {
-                        const json = JSON.parse(text);
-                        throw json;
+                        throw JSON.parse(text);
                     } catch  {
-                        // not JSON, send string message
                         throw {
                             message: text || `Request failed with status ${r.status}`
                         };
@@ -387,7 +387,7 @@ const api = {
                 return r.json();
             })
     },
-    // Players
+    // ---------------- PLAYERS ----------------
     players: {
         create: (name, clubName)=>fetch(`${API_BASE}/players`, {
                 method: "POST",
@@ -397,55 +397,89 @@ const api = {
                 body: JSON.stringify({
                     name,
                     clubName
-                })
+                }),
+                credentials: "include",
+                mode: "cors"
             }).then((r)=>r.json()),
-        list: ()=>fetch(`${API_BASE}/players`).then((r)=>r.json()),
-        byEvent: (eventId)=>fetch(`${API_BASE}/players/event/${eventId}`).then((r)=>r.json())
+        list: ()=>fetch(`${API_BASE}/players`, {
+                credentials: "include",
+                mode: "cors"
+            }).then((r)=>r.json()),
+        byEvent: (eventId)=>fetch(`${API_BASE}/players/event/${eventId}`, {
+                credentials: "include",
+                mode: "cors"
+            }).then((r)=>r.json())
     },
-    // Events
+    // ---------------- EVENTS ----------------
     events: {
         create: (data, token)=>fetch(`${API_BASE}/events`, {
                 method: "POST",
+                credentials: "include",
+                mode: "cors",
                 headers: {
                     "Content-Type": "application/json",
-                    ...token ? {
-                        Authorization: `Bearer ${token}`
-                    } : {}
+                    Authorization: token ? `Bearer ${token}` : ""
                 },
                 body: JSON.stringify(data)
             }).then(async (r)=>{
                 if (!r.ok) {
-                    const error = await r.json();
-                    throw error;
+                    const text = await r.text();
+                    try {
+                        throw JSON.parse(text);
+                    } catch  {
+                        throw {
+                            message: text
+                        };
+                    }
                 }
                 return r.json();
             }),
-        list: ()=>fetch(`${API_BASE}/events`).then((r)=>r.json()),
-        get: (id)=>fetch(`${API_BASE}/events/${id}`).then((r)=>r.json()),
-        getMatches: (eventId)=>fetch(`${API_BASE}/events/${eventId}/matches`).then((r)=>r.json()),
+        list: ()=>fetch(`${API_BASE}/events`, {
+                credentials: "include",
+                mode: "cors"
+            }).then((r)=>r.json()),
+        get: (id)=>fetch(`${API_BASE}/events/${id}`, {
+                credentials: "include",
+                mode: "cors"
+            }).then((r)=>r.json()),
+        getMatches: (eventId)=>fetch(`${API_BASE}/events/${eventId}/matches`, {
+                credentials: "include",
+                mode: "cors"
+            }).then((r)=>r.json()),
         generateFixtures: (eventId, token)=>fetch(`${API_BASE}/events/${eventId}/generate-fixtures`, {
                 method: "POST",
+                credentials: "include",
+                mode: "cors",
                 headers: {
+                    "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 }
             }).then((r)=>r.json()),
         schedule: (eventId, token)=>fetch(`${API_BASE}/events/${eventId}/schedule`, {
                 method: "POST",
+                credentials: "include",
+                mode: "cors",
                 headers: {
+                    "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 }
             }).then((r)=>r.json())
     },
-    // Matches
+    // ---------------- MATCHES ----------------
     matches: {
         generateCode: (matchId, token)=>fetch(`${API_BASE}/matches/${matchId}/generate-code`, {
                 method: "POST",
+                credentials: "include",
+                mode: "cors",
                 headers: {
+                    "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 }
             }).then((r)=>r.json()),
         verifyCode: (matchId, code)=>fetch(`${API_BASE}/matches/${matchId}/verify-code`, {
                 method: "POST",
+                credentials: "include",
+                mode: "cors",
                 headers: {
                     "Content-Type": "application/json"
                 },
@@ -455,6 +489,8 @@ const api = {
             }).then((r)=>r.json()),
         submitScore: (matchId, winnerId, token)=>fetch(`${API_BASE}/matches/${matchId}/submit-score`, {
                 method: "POST",
+                credentials: "include",
+                mode: "cors",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
@@ -508,26 +544,30 @@ function LoginPage() {
         setError("");
         setLoading(true);
         try {
+            console.log("📡 Sending login request...");
             const result = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["api"].auth.login(formData.email, formData.password);
+            console.log("🔐 Login result:", result);
+            if (!result.token) {
+                throw new Error("❌ Backend did NOT return a token");
+            }
+            console.log("💾 Saving token to localStorage:", result.token);
             localStorage.setItem("token", result.token);
-            localStorage.setItem("user", JSON.stringify({
-                userId: result.userId,
-                role: result.role
-            }));
+            localStorage.setItem("userId", result.userId);
+            localStorage.setItem("role", result.role);
+            console.log("🎉 Token saved! Redirecting...");
             router.push(result.role === "admin" ? "/admin/dashboard" : "/leaderboard");
         } catch (err) {
-            setError("Login failed. Please check your credentials.");
-            console.error("[v0] Login error:", err);
-        } finally{
-            setLoading(false);
+            console.error("❌ Login failed:", err);
+            setError(err.message || "Invalid credentials");
         }
+        setLoading(false);
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "min-h-screen bg-background",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$navbar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Navbar"], {}, void 0, false, {
                 fileName: "[project]/app/auth/login/page.tsx",
-                lineNumber: 43,
+                lineNumber: 59,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -541,7 +581,7 @@ function LoginPage() {
                                 children: "Welcome Back"
                             }, void 0, false, {
                                 fileName: "[project]/app/auth/login/page.tsx",
-                                lineNumber: 47,
+                                lineNumber: 63,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -549,13 +589,13 @@ function LoginPage() {
                                 children: "Sign in to XTHLETE tournament system"
                             }, void 0, false, {
                                 fileName: "[project]/app/auth/login/page.tsx",
-                                lineNumber: 48,
+                                lineNumber: 64,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/auth/login/page.tsx",
-                        lineNumber: 46,
+                        lineNumber: 62,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -572,7 +612,7 @@ function LoginPage() {
                                                 children: "Email"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/auth/login/page.tsx",
-                                                lineNumber: 54,
+                                                lineNumber: 70,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -585,13 +625,13 @@ function LoginPage() {
                                                 required: true
                                             }, void 0, false, {
                                                 fileName: "[project]/app/auth/login/page.tsx",
-                                                lineNumber: 55,
+                                                lineNumber: 71,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/auth/login/page.tsx",
-                                        lineNumber: 53,
+                                        lineNumber: 69,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -601,7 +641,7 @@ function LoginPage() {
                                                 children: "Password"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/auth/login/page.tsx",
-                                                lineNumber: 67,
+                                                lineNumber: 83,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -614,13 +654,13 @@ function LoginPage() {
                                                 required: true
                                             }, void 0, false, {
                                                 fileName: "[project]/app/auth/login/page.tsx",
-                                                lineNumber: 68,
+                                                lineNumber: 84,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/auth/login/page.tsx",
-                                        lineNumber: 66,
+                                        lineNumber: 82,
                                         columnNumber: 13
                                     }, this),
                                     error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -628,7 +668,7 @@ function LoginPage() {
                                         children: error
                                     }, void 0, false, {
                                         fileName: "[project]/app/auth/login/page.tsx",
-                                        lineNumber: 80,
+                                        lineNumber: 96,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -638,13 +678,13 @@ function LoginPage() {
                                         children: loading ? "Signing in..." : "Sign In"
                                     }, void 0, false, {
                                         fileName: "[project]/app/auth/login/page.tsx",
-                                        lineNumber: 85,
+                                        lineNumber: 101,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/auth/login/page.tsx",
-                                lineNumber: 52,
+                                lineNumber: 68,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -658,31 +698,31 @@ function LoginPage() {
                                         children: "Sign up"
                                     }, void 0, false, {
                                         fileName: "[project]/app/auth/login/page.tsx",
-                                        lineNumber: 92,
+                                        lineNumber: 108,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/auth/login/page.tsx",
-                                lineNumber: 90,
+                                lineNumber: 106,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/auth/login/page.tsx",
-                        lineNumber: 51,
+                        lineNumber: 67,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/auth/login/page.tsx",
-                lineNumber: 45,
+                lineNumber: 61,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/auth/login/page.tsx",
-        lineNumber: 42,
+        lineNumber: 58,
         columnNumber: 5
     }, this);
 }

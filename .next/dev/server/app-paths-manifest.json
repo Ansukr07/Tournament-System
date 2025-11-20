@@ -1,3 +1,13 @@
 {
-  "/admin/create-event/page": "app/admin/create-event/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/create-event/page": "app/admin/create-event/page.js",
+  "/admin/dashboard/page": "app/admin/dashboard/page.js",
+  "/admin/fixtures/generate/page": "app/admin/fixtures/generate/page.js",
+  "/admin/schedule/generate/page": "app/admin/schedule/generate/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/auth/register/page": "app/auth/register/page.js",
+  "/events/page": "app/events/page.js",
+  "/fixtures/page": "app/fixtures/page.js",
+  "/leaderboard/page": "app/leaderboard/page.js",
+  "/page": "app/page.js"
 }
