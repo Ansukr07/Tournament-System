@@ -1,2 +1,27 @@
-node_modules
+# Node modules
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Environment files
 .env
+*.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Dist output
+dist/
+build/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# OS garbage
+.DS_Store
+Thumbs.db
