@@ -8,6 +8,8 @@ import authRoutes from "./routes/auth"
 import playerRoutes from "./routes/players"
 import eventRoutes from "./routes/events"
 import matchRoutes from "./routes/matches"
+import dotenv from "dotenv";
+dotenv.config();
 
 const app: Express = express()
 const server = http.createServer(app)
