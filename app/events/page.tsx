@@ -7,8 +7,13 @@ import { Navbar } from "@/components/navbar"
 import { api } from "@/lib/api"
 import type { Event } from "@/shared/types"
 
+// Extend Event type locally to include participantCount if not already present
+interface EventWithCount extends Event {
+  participantCount?: number;
+}
+
 export default function EventsPage() {
-  const [events, setEvents] = useState<Event[]>([])
+  const [events, setEvents] = useState<EventWithCount[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -61,7 +66,8 @@ export default function EventsPage() {
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-muted-foreground text-xs mb-1">Participants</p>
-                    <p className="text-lg font-semibold">{event.participants?.length || 0}</p>
+                    {/* Use participantCount if available, otherwise fallback to array length or 0 */}
+                    <p className="text-lg font-semibold">{event.participantCount ?? event.participants?.length ?? 0}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground text-xs mb-1">Courts</p>

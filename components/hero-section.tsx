@@ -12,7 +12,7 @@ export function HeroSection() {
               Professional Tournament Management at Your Fingertips
             </h1>
             <p className="text-lg text-muted-foreground mb-8">
-              Create tournaments, generate intelligent fixtures, track live scores, and manage umpires with XTHLETE's
+              Create tournaments, generate intelligent fixtures, track live scores, and manage umpires with CourtFlow's
               comprehensive tournament engine.
             </p>
             <div className="flex gap-4">

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Navbar } from "@/components/navbar"
 import { api } from "@/lib/api"
 import { initSocket, onEvent, offEvent } from "@/lib/socket"
+import { BracketView } from "@/components/bracket/bracket-view"
 
 export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
@@ -202,14 +203,14 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground text-center">
-                  Don't have a Player ID? <a href="/players/register" className="text-accent hover:underline">Register a new player</a>
+                  Don't have a Team ID? <a href="/teams/register" className="text-accent hover:underline">Register a new team</a>
                 </p>
               </div>
             </Card>
           )}
 
           {selectedTab === "fixtures" && (
-            <Card className="p-6 border border-border">
+            <Card className="p-6 border border-border overflow-hidden">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">Fixtures</h2>
                 <Button onClick={handleGenerateFixtures} className="bg-accent hover:bg-accent/90">Generate Fixtures</Button>
@@ -219,23 +220,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                   No fixtures generated yet.
                 </p>
               ) : (
-                <div className="space-y-4">
-                  {matches.map((match: any) => (
-                    <div key={match._id} className="p-4 border rounded-lg flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold">Round {match.round}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {match.participants[0]?.placeholder || match.participants[0]?.playerId?.name || "TBD"} vs{" "}
-                          {match.participants[1]?.placeholder || match.participants[1]?.playerId?.name || "TBD"}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium capitalize">{match.status}</p>
-                        {match.winnerId && <p className="text-xs text-green-500">Winner: {match.winnerId.name}</p>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <BracketView fixtures={transformMatchesToBracket(matches)} />
               )}
             </Card>
           )}
@@ -262,7 +247,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                       </div>
                       <div>
                         <p className="text-sm">
-                          {match.participants[0]?.playerId?.name || "TBD"} vs {match.participants[1]?.playerId?.name || "TBD"}
+                          {match.participants[0]?.teamId?.teamName || match.participants[0]?.playerId?.name || "TBD"} vs {match.participants[1]?.teamId?.teamName || match.participants[1]?.playerId?.name || "TBD"}
                         </p>
                       </div>
                     </div>
@@ -275,4 +260,47 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
       </div>
     </div>
   )
+}
+
+function transformMatchesToBracket(matches: any[]) {
+  // Group matches by round
+  const roundsMap = new Map<number, any[]>()
+  matches.forEach((match) => {
+    if (!roundsMap.has(match.round)) {
+      roundsMap.set(match.round, [])
+    }
+    roundsMap.get(match.round)?.push(match)
+  })
+
+  // Convert to array and sort by round
+  const rounds = Array.from(roundsMap.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([round, matches]) => {
+      // Sort matches by matchNumber if available, or just keep order
+      const sortedMatches = matches.sort((a, b) => (a.matchNumber || 0) - (b.matchNumber || 0))
+
+      return {
+        round,
+        matches: sortedMatches.map((m) => ({
+          id: m._id,
+          team1: {
+            name: m.participants[0]?.teamId?.teamName || m.participants[0]?.placeholder || "TBD",
+            seed: m.participants[0]?.teamId?.seed, // Assuming seed might be available later
+            score: m.team1Score,
+            isWinner: m.winnerId && m.participants[0]?.teamId?._id === m.winnerId._id
+          },
+          team2: {
+            name: m.participants[1]?.teamId?.teamName || m.participants[1]?.placeholder || "TBD",
+            seed: m.participants[1]?.teamId?.seed,
+            score: m.team2Score,
+            isWinner: m.winnerId && m.participants[1]?.teamId?._id === m.winnerId._id
+          },
+          status: m.status,
+          winnerId: m.winnerId?._id,
+          matchCode: m.matchCode // Map matchCode
+        }))
+      }
+    })
+
+  return rounds
 }

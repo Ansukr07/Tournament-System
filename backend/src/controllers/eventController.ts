@@ -55,7 +55,28 @@ export const createEvent = async (req: Request, res: Response) => {
 
 export const getEvents = async (req: Request, res: Response) => {
   try {
-    const events = await Event.find();
+    // Use aggregation to count teams for each event
+    const events = await Event.aggregate([
+      {
+        $lookup: {
+          from: "teams",
+          localField: "_id",
+          foreignField: "events",
+          as: "registeredTeams"
+        }
+      },
+      {
+        $addFields: {
+          participantCount: { $size: "$registeredTeams" }
+        }
+      },
+      {
+        $project: {
+          registeredTeams: 0 // Remove the heavy array, keep only the count
+        }
+      }
+    ]);
+
     res.json(events);
   } catch (error: any) {
     res.status(500).json({ message: "Error fetching events", error: error.message });
@@ -83,6 +104,7 @@ export const getEventById = async (req: Request, res: Response) => {
     const eventObj = event.toObject();
     (eventObj as any).teams = teams;
     (eventObj as any).participants = participants; // Keep for backward compatibility
+    (eventObj as any).participantCount = teams.length; // Add explicit count
 
     res.json(eventObj);
   } catch (error: any) {

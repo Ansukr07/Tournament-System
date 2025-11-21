@@ -75,7 +75,8 @@ export const registerTeamToEvent = async (req: Request, res: Response) => {
             return res.status(400).json({ error: "teamId and eventId are required" });
         }
 
-        const team = await Team.findById(teamId);
+        // Find team by custom teamId string
+        const team = await Team.findOne({ teamId: teamId });
         if (!team) {
             return res.status(404).json({ error: "Team not found" });
         }

@@ -15,6 +15,7 @@ export interface IMatch extends Document {
     matchCodeId?: mongoose.Types.ObjectId;
     umpireId?: mongoose.Types.ObjectId;
     matchNumber?: number;
+    matchCode?: string; // Added matchCode
     nextMatchId?: mongoose.Types.ObjectId;
 }
 
@@ -39,6 +40,7 @@ const MatchSchema: Schema = new Schema({
     matchCodeId: { type: Schema.Types.ObjectId, ref: "MatchCode" },
     umpireId: { type: Schema.Types.ObjectId, ref: "User" },
     matchNumber: { type: Number },
+    matchCode: { type: String }, // Added matchCode
     nextMatchId: { type: Schema.Types.ObjectId, ref: "Match" },
 });
 

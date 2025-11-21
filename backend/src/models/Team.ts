@@ -31,7 +31,7 @@ const TeamSchema: Schema = new Schema(
         clubId: { type: Schema.Types.ObjectId, ref: "Club" },
         members: [TeamMemberSchema],
         events: [{ type: Schema.Types.ObjectId, ref: "Event" }],
-        teamId: { type: String, required: true, unique: true },
+        teamId: { type: String, unique: true },
     },
     { timestamps: true }
 );
