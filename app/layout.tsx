@@ -1,5 +1,8 @@
 import type React from "react"
 import type { Metadata } from "next"
+import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
+import { ThemeProvider } from "@/components/theme-provider"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
@@ -33,7 +36,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <div className="flex flex-col min-h-screen">
+            {children}
+            <Footer />
+          </div>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

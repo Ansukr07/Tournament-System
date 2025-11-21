@@ -6,12 +6,20 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Navbar } from "@/components/navbar"
 import { api } from "@/lib/api"
+import Link from "next/link"
 
 interface DashboardStats {
   totalEvents: number
   activeEvents: number
   totalPlayers: number
   upcomingMatches: number
+}
+
+interface EventSummary {
+  _id: string
+  name: string
+  status: string
+  startDate?: string
 }
 
 export default function AdminDashboardPage() {
@@ -22,6 +30,7 @@ export default function AdminDashboardPage() {
     totalPlayers: 0,
     upcomingMatches: 0,
   })
+  const [recentEvents, setRecentEvents] = useState<EventSummary[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -34,6 +43,8 @@ export default function AdminDashboardPage() {
           totalPlayers: players.length,
           upcomingMatches: 0,
         })
+        // Sort by creation date (assuming _id roughly correlates or backend sorts) and take top 5
+        setRecentEvents(events.slice(0, 5))
       } catch (error) {
         console.error("[v0] Error fetching stats:", error)
       } finally {
@@ -105,60 +116,84 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
 
-        {/* Quick Actions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="p-6 border border-border">
-            <h2 className="text-lg font-bold mb-4">Quick Actions</h2>
-            <div className="flex flex-col gap-3">
-              <Button
-                className="w-full bg-accent hover:bg-accent/90"
-                onClick={() => router.push('/admin/create-event')}
-              >
-                Create New Event
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full bg-transparent"
-                onClick={() => router.push('/players')}
-              >
-                Manage Players
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full bg-transparent"
-                onClick={() => router.push('/fixtures')}
-              >
-                View All Fixtures
-              </Button>
-            </div>
-          </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Quick Actions */}
+          <div className="lg:col-span-1">
+            <Card className="p-6 border border-border h-full">
+              <h2 className="text-xl font-bold mb-6">Quick Actions</h2>
+              <div className="space-y-4">
+                <Button
+                  className="w-full bg-accent hover:bg-accent/90 h-12 text-lg"
+                  onClick={() => router.push('/admin/create-event')}
+                >
+                  + Create New Event
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full h-12 text-lg"
+                  onClick={() => router.push('/events')}
+                >
+                  View All Events
+                </Button>
+              </div>
+            </Card>
+          </div>
 
-          <Card className="p-6 border border-border">
-            <h2 className="text-lg font-bold mb-4">Event Management</h2>
-            <div className="flex flex-col gap-3">
-              <Button
-                variant="outline"
-                className="w-full bg-transparent"
-                onClick={() => router.push('/admin/fixtures/generate')}
-              >
-                Generate Fixtures
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full bg-transparent"
-                onClick={() => router.push('/admin/schedule/generate')}
-              >
-                Schedule Matches
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full bg-transparent"
-                onClick={() => router.push('/admin/match-codes/generate')}
-              >
-                Generate Match Codes
-              </Button>
-            </div>
-          </Card>
+          {/* Event Management */}
+          <div className="lg:col-span-2">
+            <Card className="p-6 border border-border">
+              <h2 className="text-xl font-bold mb-6">Recent Events Management</h2>
+              <div className="space-y-4">
+                {loading ? (
+                  <p className="text-muted-foreground">Loading events...</p>
+                ) : recentEvents.length === 0 ? (
+                  <p className="text-muted-foreground">No events found. Create one to get started!</p>
+                ) : (
+                  recentEvents.map((event) => (
+                    <div
+                      key={event._id}
+                      className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/5 transition"
+                    >
+                      <div>
+                        <h3 className="font-bold text-lg">{event.name}</h3>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-xs px-2 py-0.5 bg-accent/10 text-accent rounded-full uppercase font-semibold">
+                            {event.status}
+                          </span>
+                          {event.startDate && (
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(event.startDate).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => router.push(`/teams/register?eventId=${event._id}`)}
+                        >
+                          Add Team
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-accent hover:bg-accent/90"
+                          onClick={() => router.push(`/events/${event._id}`)}
+                        >
+                          Manage
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="mt-6 text-center">
+                <Link href="/events" className="text-sm text-muted-foreground hover:text-accent">
+                  View all events →
+                </Link>
+              </div>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

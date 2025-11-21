@@ -72,10 +72,14 @@ export function EventsGrid() {
                 </h3>
 
                 <p className="text-sm text-muted-foreground mb-4">
-                  {event.location || "Unknown venue"}
+                  {event.type || "Not Specified"}
                 </p>
 
                 <div className="space-y-2 mb-6 text-sm">
+                  <p>
+                    <span className="text-muted-foreground">Category:</span>{" "}
+                    {event.category || 0}
+                  </p>
                   <p>
                     <span className="text-muted-foreground">Participants:</span>{" "}
                     {event.participantCount ??

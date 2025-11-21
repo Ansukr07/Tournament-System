@@ -40,9 +40,14 @@ export function Navbar() {
             <Link href="/leaderboard" className="text-sm text-muted-foreground hover:text-foreground transition">
               Leaderboard
             </Link>
-            <Link href="/my-matches" className="text-sm text-muted-foreground hover:text-foreground transition">
-              My Matches
+            <Link href="/demo" className="text-sm text-muted-foreground hover:text-foreground transition">
+              Demo
             </Link>
+            {token && (
+              <Link href="/admin/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition">
+                Admin Dashboard
+              </Link>
+            )}
           </div>
 
           <div className="flex gap-2">
@@ -53,12 +58,12 @@ export function Navbar() {
             ) : (
               <>
                 <Button variant="outline" size="sm">
-                  <Link href="/auth/login" className="text-sm text-muted-foreground hover:text-foreground transition">
+                  <Link href="/auth/login" className="text-sm ">
                     Login
                   </Link>
                 </Button>
                 <Button size="sm" className="bg-accent">
-                  <Link href="/auth/register" className="text-sm text-muted-foreground hover:text-foreground transition">
+                  <Link href="/auth/register" className="text-sm ">
                     Sign Up
                   </Link>
                 </Button>

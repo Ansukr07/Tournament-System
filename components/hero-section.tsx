@@ -2,7 +2,16 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button"
 
+import { useEffect, useState } from "react"
+
 export function HeroSection() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+    setIsLoggedIn(!!token)
+  }, [])
+
   return (
     <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
       <div className="max-w-7xl mx-auto">
@@ -16,7 +25,7 @@ export function HeroSection() {
               comprehensive tournament engine.
             </p>
             <div className="flex gap-4">
-              <Link href="/auth/login">
+              <Link href={isLoggedIn ? "/admin/create-event" : "/auth/login"}>
                 <Button className="bg-accent hover:bg-accent/90 h-12 px-8">
                   Create Tournament
                 </Button>
