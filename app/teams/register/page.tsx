@@ -95,7 +95,7 @@ export default function RegisterTeamPage() {
                 </div>
 
                 {success && createdTeam ? (
-                    <Card className="p-8 border-2 border-green-500 bg-green-50 dark:bg-green-950">
+                    <Card className="p-8 border-2 border-green-500 bg-white-50 dark:bg-green-950">
                         <div className="space-y-4">
                             <h2 className="text-2xl font-bold text-green-700 dark:text-green-300">
                                 ✓ Team Registered Successfully!
@@ -108,7 +108,7 @@ export default function RegisterTeamPage() {
                                     <strong>Club:</strong> {createdTeam.clubName}
                                 </p>
                                 <p className="text-sm">
-                                    <strong>Team ID:</strong> <code className="bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded">{createdTeam.teamId}</code>
+                                    <strong>Team ID:</strong> <code>{createdTeam.teamId}</code>
                                 </p>
                                 <p className="text-sm">
                                     <strong>Members:</strong> {createdTeam.members?.length || 0}
