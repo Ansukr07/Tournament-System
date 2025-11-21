@@ -93,31 +93,33 @@ export function BracketMatch({
             {!isFinal && (
                 <>
                     {/* Horizontal Line to Right */}
-                    <div className="absolute right-[-20px] top-1/2 w-[20px] h-[2px] bg-white" />
+                    <div className="absolute right-[-20px] top-1/2 w-[20px] h-[2px] bg-border" />
 
                     {/* Vertical Connector Logic */}
-                    {/* If this is an even match (0, 2, 4...), it connects DOWN. If odd, it connects UP. */}
+                    {/* 
+                        Calculate vertical line height based on round:
+                        - Round 0: connects to match ~60px + 32px (baseGap) away = ~92px
+                        - Round 1: connects to match ~60px + 64px away = ~124px
+                        - Round 2: connects to match ~60px + 128px away = ~188px
+                        Formula: 60px (half match height) + (32 * 2^roundIndex)
+                    */}
                     {matchIndex % 2 === 0 ? (
-                        <div className="absolute right-[-22px] top-1/2 w-[2px] h-[calc(100%+2rem)] bg-border rounded-tr-md" />
+                        // Even match - connect down to next match
+                        <div
+                            className="absolute right-[-22px] top-1/2 w-[2px] bg-border"
+                            style={{
+                                height: `${60 + (32 * Math.pow(2, roundIndex))}px`
+                            }}
+                        />
                     ) : (
-                        <div className="absolute right-[-22px] bottom-1/2 w-[2px] h-[calc(100%+2rem)] bg-border rounded-br-md" />
+                        // Odd match - connect up to previous match  
+                        <div
+                            className="absolute right-[-22px] bottom-1/2 w-[2px] bg-border"
+                            style={{
+                                height: `${60 + (32 * Math.pow(2, roundIndex))}px`
+                            }}
+                        />
                     )}
-
-                    {/* Horizontal Connector from Vertical Line to Next Match */}
-                    {/* This is actually handled by the next match's "left" connector or the parent container spacing. 
-              But typically in this CSS-only approach, we might need a connector on the "parent" side.
-              Let's stick to the simple right-side connectors for now. 
-              The vertical line needs to span to the sibling match. 
-              
-              Actually, a better way for the vertical line:
-              Match A (Even) ----+
-                                 |
-                                 +---- Match C
-                                 |
-              Match B (Odd)  ----+
-              
-              The vertical line height depends on the gap between matches.
-          */}
                 </>
             )}
 

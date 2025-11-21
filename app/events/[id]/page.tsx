@@ -210,7 +210,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
           )}
 
           {selectedTab === "fixtures" && (
-            <Card className="p-6 border border-border overflow-hidden">
+            <Card className="p-6 border border-border">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">Fixtures</h2>
                 <Button onClick={handleGenerateFixtures} className="bg-accent hover:bg-accent/90">Generate Fixtures</Button>
