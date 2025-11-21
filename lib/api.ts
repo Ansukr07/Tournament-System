@@ -56,6 +56,71 @@ export const api = {
 
     byEvent: (eventId: string) =>
       fetch(`${API_BASE}/players/event/${eventId}`, { credentials: "include", mode: "cors" }).then((r) => r.json()),
+
+    registerToEvent: (eventId: string, uniqueId: string) =>
+      fetch(`${API_BASE}/players/register-to-event`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId, uniqueId }),
+        credentials: "include",
+        mode: "cors",
+      }).then(async (r) => {
+        if (!r.ok) {
+          const text = await r.text();
+          try {
+            throw JSON.parse(text);
+          } catch {
+            throw { message: text || `Request failed with status ${r.status}` };
+          }
+        }
+        return r.json();
+      }),
+  },
+
+  // ---------------- TEAMS ----------------
+  teams: {
+    create: (teamData: any) =>
+      fetch(`${API_BASE}/teams`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(teamData),
+        credentials: "include",
+        mode: "cors",
+      }).then(async (r) => {
+        if (!r.ok) {
+          const text = await r.text();
+          try {
+            throw JSON.parse(text);
+          } catch {
+            throw { message: text || `Request failed with status ${r.status}` };
+          }
+        }
+        return r.json();
+      }),
+
+    list: () => fetch(`${API_BASE}/teams`, { credentials: "include", mode: "cors" }).then((r) => r.json()),
+
+    byEvent: (eventId: string) =>
+      fetch(`${API_BASE}/teams/event/${eventId}`, { credentials: "include", mode: "cors" }).then((r) => r.json()),
+
+    registerToEvent: (teamId: string, eventId: string) =>
+      fetch(`${API_BASE}/teams/register-to-event`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId, eventId }),
+        credentials: "include",
+        mode: "cors",
+      }).then(async (r) => {
+        if (!r.ok) {
+          const text = await r.text();
+          try {
+            throw JSON.parse(text);
+          } catch {
+            throw { message: text || `Request failed with status ${r.status}` };
+          }
+        }
+        return r.json();
+      }),
   },
 
   // ---------------- EVENTS ----------------

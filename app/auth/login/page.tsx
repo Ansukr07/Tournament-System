@@ -61,7 +61,7 @@ export default function LoginPage() {
       <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
-          <p className="text-muted-foreground">Sign in to XTHLETE tournament system</p>
+          <p className="text-muted-foreground">Sign in to CourtFlow tournament system</p>
         </div>
 
         <Card className="p-8 border border-border">

@@ -27,6 +27,10 @@ export default function RegisterPlayerPage() {
 
     try {
       const player = await api.players.create(formData.name, formData.clubName)
+      console.log("API Response:", player)
+      console.log("Player name:", player.name)
+      console.log("Player uniqueId:", player.uniqueId)
+      console.log("Player clubName:", player.clubName)
       setCreatedPlayer(player)
       setSuccess(true)
       setFormData({ name: "", clubName: "" })
@@ -107,7 +111,7 @@ export default function RegisterPlayerPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Club:</span>
-                    <span className="font-semibold">{formData.clubName}</span>
+                    <span className="font-semibold">{createdPlayer.clubName || formData.clubName}</span>
                   </div>
                 </div>
                 <Button onClick={() => setSuccess(false)} variant="outline" className="w-full text-sm h-8">

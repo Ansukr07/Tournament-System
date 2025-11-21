@@ -50,8 +50,7 @@ export default function RegisterPage() {
       <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">Create Account</h1>
-          <p className="text-muted-foreground">Join XTHLETE tournament system</p>
-        </div>
+          CourtFlow         </div>
 
         <Card className="p-8 border border-border">
           <form onSubmit={handleSubmit} className="space-y-6">

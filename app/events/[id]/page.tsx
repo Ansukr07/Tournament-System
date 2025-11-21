@@ -87,8 +87,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="p-4 border border-border">
-            <p className="text-muted-foreground text-sm mb-1">Participants</p>
-            <p className="text-2xl font-bold">{event.participants?.length || 0}</p>
+            <p className="text-muted-foreground text-sm mb-1">Teams</p>
+            <p className="text-2xl font-bold">{event.teams?.length || 0}</p>
           </Card>
           <Card className="p-4 border border-border">
             <p className="text-muted-foreground text-sm mb-1">Courts</p>
@@ -140,9 +140,71 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
           {selectedTab === "participants" && (
             <Card className="p-6 border border-border">
-              <h2 className="text-xl font-bold mb-4">Registered Participants</h2>
-              <p className="text-muted-foreground text-center py-8">{event.participants?.length || 0} players registered</p>
-              <Button className="w-full bg-accent hover:bg-accent/90">Register as Participant</Button>
+              <h2 className="text-xl font-bold mb-4">Registered Teams</h2>
+              <p className="text-muted-foreground text-center mb-6">{event.teams?.length || 0} teams registered</p>
+
+              {event.teams && event.teams.length > 0 && (
+                <div className="grid gap-4 mb-8">
+                  {event.teams.map((team: any) => (
+                    <div key={team._id} className="p-4 border rounded-lg bg-card">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="font-semibold text-lg">{team.teamName}</p>
+                          <p className="text-sm text-muted-foreground">{team.clubName}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs font-mono bg-muted px-2 py-1 rounded">{team.teamId}</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 pl-4 border-l-2 border-muted">
+                        <p className="text-xs text-muted-foreground mb-2">Members ({team.members?.length || 0}):</p>
+                        <div className="space-y-1">
+                          {team.members?.map((member: any, idx: number) => (
+                            <p key={idx} className="text-sm">
+                              {member.name} ({member.age}, {member.gender})
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter Team ID (e.g. T-123...)"
+                    className="flex-1 px-4 py-2 rounded-lg border border-input bg-card text-foreground"
+                    id="team-id-input"
+                  />
+                  <Button
+                    className="bg-accent hover:bg-accent/90"
+                    onClick={async () => {
+                      const input = document.getElementById("team-id-input") as HTMLInputElement;
+                      const teamId = input.value;
+                      if (!teamId) return alert("Please enter a Team ID");
+
+                      try {
+                        await api.teams.registerToEvent(teamId, eventId);
+                        alert("Team registered successfully!");
+                        input.value = "";
+                        // Refresh event data
+                        const eventData = await api.events.get(eventId);
+                        setEvent(eventData);
+                      } catch (err: any) {
+                        alert(err.message || "Failed to register team");
+                      }
+                    }}
+                  >
+                    Register Team
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  Don't have a Player ID? <a href="/players/register" className="text-accent hover:underline">Register a new player</a>
+                </p>
+              </div>
             </Card>
           )}
 
