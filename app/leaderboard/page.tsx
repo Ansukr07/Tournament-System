@@ -53,7 +53,7 @@ export default function LeaderboardPage() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Global Leaderboard</h1>
+          <h1 className="text-4xl font-bold mb-2">Global Leaderboard (Demo)</h1>
           <p className="text-muted-foreground">Real-time tournament standings updated live</p>
         </div>
 
@@ -67,11 +67,10 @@ export default function LeaderboardPage() {
                 return (
                   <Card
                     key={standing.playerId}
-                    className={`p-6 border text-center ${
-                      idx === 0
+                    className={`p-6 border text-center ${idx === 0
                         ? "border-yellow-500/50 bg-yellow-500/5 md:row-span-2 md:flex md:flex-col md:justify-center"
                         : "border-border"
-                    }`}
+                      }`}
                   >
                     <p className="text-3xl mb-2">{medals[idx]}</p>
                     <p className="text-2xl font-bold mb-1">#{idx + 1}</p>

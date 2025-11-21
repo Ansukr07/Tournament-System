@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Team from "../models/Team";
 import Event from "../models/Event";
+import Match from "../models/Match"; // Added Match import
 import mongoose from "mongoose";
 
 // Create a new team
@@ -115,5 +116,44 @@ export const getTeamsByEvent = async (req: Request, res: Response) => {
         res.json(teams);
     } catch (error: any) {
         res.status(500).json({ error: "Failed to fetch teams", message: error.message });
+    }
+};
+
+// Get leaderboard based on match wins
+export const getLeaderboard = async (req: Request, res: Response) => {
+    try {
+        const leaderboard = await Match.aggregate([
+            { $match: { status: "completed", winnerId: { $exists: true } } },
+            {
+                $group: {
+                    _id: "$winnerId",
+                    wins: { $sum: 1 }
+                }
+            },
+            { $sort: { wins: -1 } },
+            { $limit: 5 },
+            {
+                $lookup: {
+                    from: "teams",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "teamDetails"
+                }
+            },
+            { $unwind: "$teamDetails" },
+            {
+                $project: {
+                    _id: 1,
+                    wins: 1,
+                    teamName: "$teamDetails.teamName",
+                    clubName: "$teamDetails.clubName"
+                }
+            }
+        ]);
+
+        res.json(leaderboard);
+    } catch (error: any) {
+        console.error("Leaderboard error:", error);
+        res.status(500).json({ error: "Failed to fetch leaderboard", message: error.message });
     }
 };

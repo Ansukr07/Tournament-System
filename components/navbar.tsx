@@ -28,7 +28,7 @@ export function Navbar() {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center gap-2 font-bold text-xl">
             <div className="w-13 h-13 bg-accent rounded-lg flex items-center justify-center overflow-hidden">
-              <img src="/logo1.jpeg" alt="Logo" className="w-full h-full object-cover" />
+              <img src="/logo2.jpg" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <span>CourtFlow</span>
           </Link>

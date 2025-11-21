@@ -8,17 +8,17 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "XTHLETE - Tournament Engine",
+  title: "CourtFlow - Tournament Engine",
   description: "Professional sports tournament management system",
-  generator: "v0.app",
+  generator: "",
   icons: {
     icon: [
       {
-        url: "/icon-light-32x32.png",
+        url: "/logo2.jpg",
         media: "(prefers-color-scheme: light)",
       },
       {
-        url: "/icon-dark-32x32.png",
+        url: "/logo2.jpg",
         media: "(prefers-color-scheme: dark)",
       },
     ],
