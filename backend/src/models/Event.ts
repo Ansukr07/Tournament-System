@@ -9,6 +9,7 @@ export interface IEvent extends Document {
     courts: string[];
     startDate?: Date;
     endDate?: Date;
+    teams: mongoose.Types.ObjectId[];
 }
 
 const EventSchema: Schema = new Schema({
@@ -18,6 +19,7 @@ const EventSchema: Schema = new Schema({
     matchDuration: { type: Number, required: true },
     bufferMinutes: { type: Number, default: 5 },
     courts: [{ type: String }],
+    teams: [{ type: Schema.Types.ObjectId, ref: "Team" }],
 
     // ADD THESE:
     startDate: { type: Date },

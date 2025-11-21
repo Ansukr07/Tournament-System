@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IPlayer extends Document {
     name: string;
     uniqueId: string;
+    clubName?: string;
     clubId?: mongoose.Types.ObjectId;
     events: mongoose.Types.ObjectId[];
 }
@@ -10,6 +11,7 @@ export interface IPlayer extends Document {
 const PlayerSchema: Schema = new Schema({
     name: { type: String, required: true },
     uniqueId: { type: String, required: true, unique: true },
+    clubName: { type: String },
     clubId: { type: Schema.Types.ObjectId, ref: "Club" },
     events: [{ type: Schema.Types.ObjectId, ref: "Event" }],
 });

@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import Event from "../models/Event";
 import Match from "../models/Match";
 import Player from "../models/Player";
+import Team from "../models/Team";
 import { generateKnockoutFixtures, generateRoundRobinFixtures } from "../services/fixtureService";
 import { scheduleMatches } from "../services/schedulingService";
 
@@ -64,7 +66,25 @@ export const getEventById = async (req: Request, res: Response) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: "Event not found" });
-    res.json(event);
+
+    console.log("Fetching teams for event:", req.params.id);
+
+    // Fetch teams registered for this event
+    const teams = await Team.find({
+      events: { $in: [req.params.id, new mongoose.Types.ObjectId(req.params.id)] }
+    });
+    console.log("Found teams:", teams.length);
+
+    // Also fetch players for backward compatibility
+    const participants = await Player.find({
+      events: { $in: [req.params.id, new mongoose.Types.ObjectId(req.params.id)] }
+    });
+
+    const eventObj = event.toObject();
+    (eventObj as any).teams = teams;
+    (eventObj as any).participants = participants; // Keep for backward compatibility
+
+    res.json(eventObj);
   } catch (error: any) {
     res.status(500).json({ message: "Error fetching event", error: error.message });
   }
@@ -73,27 +93,30 @@ export const getEventById = async (req: Request, res: Response) => {
 export const generateFixtures = async (req: Request, res: Response) => {
   try {
     const eventId = req.params.id;
-    const { playerIds } = req.body; // Optional: specific players to include
+    const { teamIds } = req.body; // Optional: specific teams to include
 
     const event = await Event.findById(eventId);
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
 
-    // If specific players provided, register them to the event
-    if (playerIds && Array.isArray(playerIds)) {
-      await Player.updateMany(
-        { _id: { $in: playerIds } },
+    // If specific teams provided, register them to the event
+    if (teamIds && Array.isArray(teamIds)) {
+      await Team.updateMany(
+        { _id: { $in: teamIds } },
         { $addToSet: { events: eventId } }
       );
+      await Event.findByIdAndUpdate(eventId, {
+        $addToSet: { teams: { $each: teamIds } }
+      });
     }
 
-    // Check if players are registered
-    const existingPlayers = await Player.find({ events: eventId });
+    // Check if teams are registered
+    const existingTeams = await Team.find({ events: eventId });
 
-    if (existingPlayers.length === 0) {
+    if (existingTeams.length === 0) {
       return res.status(400).json({
-        message: "No players registered for this event. Please add players first."
+        message: "No teams registered for this event. Please add teams first."
       });
     }
 
@@ -110,7 +133,7 @@ export const generateFixtures = async (req: Request, res: Response) => {
       message: `${event.type} fixtures generated successfully`,
       matches,
       count: matches.length,
-      playerCount: existingPlayers.length
+      teamCount: existingTeams.length
     });
   } catch (error: any) {
     console.error("Generate fixtures error:", error);
@@ -137,7 +160,7 @@ export const scheduleEventMatches = async (req: Request, res: Response) => {
 export const getEventMatches = async (req: Request, res: Response) => {
   try {
     const matches = await Match.find({ eventId: req.params.id })
-      .populate("participants.playerId")
+      .populate("participants.teamId")
       .populate("winnerId")
       .sort({ round: 1, startTime: 1 });
 

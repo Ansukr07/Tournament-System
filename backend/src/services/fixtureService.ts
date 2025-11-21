@@ -1,13 +1,20 @@
 import Match from "../models/Match";
-import Player from "../models/Player";
+import Team from "../models/Team";
 import Event from "../models/Event";
 import mongoose from "mongoose";
+
+interface TeamWithClub {
+    _id: mongoose.Types.ObjectId;
+    teamName: string;
+    clubName: string;
+    clubId: mongoose.Types.ObjectId;
+}
 
 /**
  * Calculate the number of rounds needed for knockout tournament
  */
-function calculateRounds(playerCount: number): number {
-    return Math.ceil(Math.log2(playerCount));
+function calculateRounds(teamCount: number): number {
+    return Math.ceil(Math.log2(teamCount));
 }
 
 /**
@@ -18,40 +25,40 @@ function nextPowerOfTwo(n: number): number {
 }
 
 /**
- * Shuffle array while trying to avoid same-club matchups in early rounds
+ * Shuffle teams while trying to avoid same-club matchups in early rounds
  */
-function sortPlayersForClubAvoidance(players: any[]): any[] {
-    // Group players by club
-    const clubGroups: { [key: string]: any[] } = {};
-    const noClubPlayers: any[] = [];
+function sortTeamsForClubAvoidance(teams: TeamWithClub[]): TeamWithClub[] {
+    // Group teams by club
+    const clubGroups: { [key: string]: TeamWithClub[] } = {};
+    const noClubTeams: TeamWithClub[] = [];
 
-    players.forEach(player => {
-        if (player.clubId) {
-            const clubId = player.clubId.toString();
-            if (!clubGroups[clubId]) {
-                clubGroups[clubId] = [];
+    teams.forEach(team => {
+        if (team.clubName) {
+            const clubKey = team.clubName;
+            if (!clubGroups[clubKey]) {
+                clubGroups[clubKey] = [];
             }
-            clubGroups[clubId].push(player);
+            clubGroups[clubKey].push(team);
         } else {
-            noClubPlayers.push(player);
+            noClubTeams.push(team);
         }
     });
 
-    // Interleave players from different clubs
-    const result: any[] = [];
-    const clubIds = Object.keys(clubGroups);
+    // Interleave teams from different clubs
+    const result: TeamWithClub[] = [];
+    const clubNames = Object.keys(clubGroups);
     let clubIndex = 0;
 
     while (Object.values(clubGroups).some(group => group.length > 0)) {
-        const clubId = clubIds[clubIndex % clubIds.length];
-        if (clubGroups[clubId] && clubGroups[clubId].length > 0) {
-            result.push(clubGroups[clubId].shift()!);
+        const clubName = clubNames[clubIndex % clubNames.length];
+        if (clubGroups[clubName] && clubGroups[clubName].length > 0) {
+            result.push(clubGroups[clubName].shift()!);
         }
         clubIndex++;
     }
 
-    // Add players without clubs at the end
-    return [...result, ...noClubPlayers];
+    // Add teams without clubs at the end
+    return [...result, ...noClubTeams];
 }
 
 /**
@@ -65,45 +72,45 @@ export const generateKnockoutFixtures = async (eventId: string) => {
         // Clear existing matches for this event
         await Match.deleteMany({ eventId });
 
-        // Get all players registered for this event
-        const players = await Player.find({ events: eventId }).populate("clubId");
+        // Get all teams registered for this event
+        const teams = await Team.find({ events: eventId }) as TeamWithClub[];
 
-        if (players.length < 2) {
-            throw new Error("Need at least 2 players to generate fixtures");
+        if (teams.length < 2) {
+            throw new Error("Need at least 2 teams to generate fixtures");
         }
 
-        console.log(`Generating knockout fixtures for ${players.length} players`);
+        console.log(`Generating knockout fixtures for ${teams.length} teams`);
 
-        // Sort players to avoid same-club matchups
-        const sortedPlayers = sortPlayersForClubAvoidance(players);
+        // Sort teams to avoid same-club matchups
+        const sortedTeams = sortTeamsForClubAvoidance(teams);
 
-        const totalRounds = calculateRounds(sortedPlayers.length);
-        const bracketSize = nextPowerOfTwo(sortedPlayers.length);
-        const byeCount = bracketSize - sortedPlayers.length;
+        const totalRounds = calculateRounds(sortedTeams.length);
+        const bracketSize = nextPowerOfTwo(sortedTeams.length);
+        const byeCount = bracketSize - sortedTeams.length;
 
         console.log(`Total rounds: ${totalRounds}, Bracket size: ${bracketSize}, BYEs: ${byeCount}`);
 
         const allMatches: any[] = [];
         let matchCounter = 1;
 
-        // Round 1: Create matches with real players and BYEs
-        const round1Players = [...sortedPlayers];
+        // Round 1: Create matches with real teams and BYEs
+        const round1Teams = [...sortedTeams];
         const round1Matches: any[] = [];
 
         for (let i = 0; i < bracketSize / 2; i++) {
-            const player1 = round1Players[i * 2];
-            const player2 = round1Players[i * 2 + 1];
+            const team1 = round1Teams[i * 2];
+            const team2 = round1Teams[i * 2 + 1];
 
             const match = {
                 eventId,
                 round: 1,
                 matchNumber: matchCounter++,
                 participants: [
-                    player1 ? { playerId: player1._id } : { placeholder: "BYE" },
-                    player2 ? { playerId: player2._id } : { placeholder: "BYE" }
+                    team1 ? { teamId: team1._id } : { placeholder: "BYE" },
+                    team2 ? { teamId: team2._id } : { placeholder: "BYE" }
                 ],
-                status: (!player1 || !player2) ? "completed" : "pending",
-                winnerId: !player2 && player1 ? player1._id : (!player1 && player2 ? player2._id : undefined)
+                status: (!team1 || !team2) ? "completed" : "pending",
+                winnerId: !team2 && team1 ? team1._id : (!team1 && team2 ? team2._id : undefined)
             };
 
             round1Matches.push(match);
@@ -137,6 +144,24 @@ export const generateKnockoutFixtures = async (eventId: string) => {
         // Save all matches
         const savedMatches = await Match.insertMany(allMatches);
 
+        // Link matches to next round
+        for (let i = 0; i < savedMatches.length; i++) {
+            const match = savedMatches[i];
+            const nextRound = match.round + 1;
+
+            if (nextRound <= totalRounds) {
+                const nextMatchNumber = Math.ceil(match.matchNumber / 2);
+                const nextMatch = savedMatches.find(
+                    m => m.round === nextRound && m.matchNumber === nextMatchNumber
+                );
+
+                if (nextMatch) {
+                    match.nextMatchId = nextMatch._id;
+                    await match.save();
+                }
+            }
+        }
+
         console.log(`Created ${savedMatches.length} matches across ${totalRounds} rounds`);
 
         // Auto-advance BYE winners
@@ -163,35 +188,35 @@ export const generateRoundRobinFixtures = async (eventId: string) => {
 
         await Match.deleteMany({ eventId });
 
-        const players = await Player.find({ events: eventId }).populate("clubId");
+        const teams = await Team.find({ events: eventId }) as TeamWithClub[];
 
-        if (players.length < 2) {
-            throw new Error("Need at least 2 players to generate fixtures");
+        if (teams.length < 2) {
+            throw new Error("Need at least 2 teams to generate fixtures");
         }
 
-        console.log(`Generating round-robin fixtures for ${players.length} players`);
+        console.log(`Generating round-robin fixtures for ${teams.length} teams`);
 
         const matches: any[] = [];
         let matchCounter = 1;
         let round = 1;
 
-        // Round robin: every player plays every other player
-        for (let i = 0; i < players.length; i++) {
-            for (let j = i + 1; j < players.length; j++) {
-                const player1 = players[i];
-                const player2 = players[j];
+        // Round robin: every team plays every other team
+        for (let i = 0; i < teams.length; i++) {
+            for (let j = i + 1; j < teams.length; j++) {
+                const team1 = teams[i];
+                const team2 = teams[j];
 
                 // Check if same club (for prioritization, not blocking)
-                const sameClub = player1.clubId && player2.clubId &&
-                    player1.clubId.toString() === player2.clubId.toString();
+                const sameClub = team1.clubName && team2.clubName &&
+                    team1.clubName === team2.clubName;
 
                 const match = {
                     eventId,
                     round: sameClub ? round + 1 : round, // Push same-club matches to later rounds
                     matchNumber: matchCounter++,
                     participants: [
-                        { playerId: player1._id },
-                        { playerId: player2._id }
+                        { teamId: team1._id },
+                        { teamId: team2._id }
                     ],
                     status: "pending"
                 };
@@ -222,42 +247,63 @@ export const advanceWinner = async (matchId: string, winnerId: string) => {
         const match = await Match.findById(matchId);
         if (!match) throw new Error("Match not found");
 
-        const currentRound = match.round;
-        const matchNumber = match.matchNumber || 0;
+        // If nextMatchId is set, use it directly
+        if (match.nextMatchId) {
+            const nextMatch = await Match.findById(match.nextMatchId);
+            if (nextMatch) {
+                // Determine position based on match number
+                const position = (match.matchNumber! - 1) % 2;
 
-        // Find the next round match where this winner should go
-        const nextRoundMatches = await Match.find({
-            eventId: match.eventId,
-            round: currentRound + 1
-        }).sort({ matchNumber: 1 });
+                if (position === 0) {
+                    nextMatch.participants[0] = { teamId: new mongoose.Types.ObjectId(winnerId) };
+                } else {
+                    nextMatch.participants[1] = { teamId: new mongoose.Types.ObjectId(winnerId) };
+                }
 
-        if (nextRoundMatches.length === 0) {
-            console.log("No next round - tournament complete!");
-            return;
-        }
+                // Check if both participants are now filled
+                const bothFilled = nextMatch.participants[0].teamId && nextMatch.participants[1].teamId;
+                if (bothFilled && nextMatch.status === "pending") {
+                    nextMatch.status = "scheduled";
+                }
 
-        // Determine which next match and which position
-        const nextMatchIndex = Math.floor((matchNumber - 1) / 2);
-        const position = (matchNumber - 1) % 2;
+                await nextMatch.save();
+                console.log(`Advanced winner to Match ${nextMatch.matchNumber} in Round ${nextMatch.round}`);
+            }
+        } else {
+            // Fallback: find next match by round and match number
+            const currentRound = match.round;
+            const matchNumber = match.matchNumber || 0;
 
-        if (nextMatchIndex < nextRoundMatches.length) {
-            const nextMatch = nextRoundMatches[nextMatchIndex];
+            const nextRoundMatches = await Match.find({
+                eventId: match.eventId,
+                round: currentRound + 1
+            }).sort({ matchNumber: 1 });
 
-            // Update the participant
-            if (position === 0) {
-                nextMatch.participants[0] = { playerId: new mongoose.Types.ObjectId(winnerId) };
-            } else {
-                nextMatch.participants[1] = { playerId: new mongoose.Types.ObjectId(winnerId) };
+            if (nextRoundMatches.length === 0) {
+                console.log("No next round - tournament complete!");
+                return;
             }
 
-            // Check if both participants are now filled
-            const bothFilled = nextMatch.participants[0].playerId && nextMatch.participants[1].playerId;
-            if (bothFilled && nextMatch.status === "pending") {
-                nextMatch.status = "scheduled";
-            }
+            const nextMatchIndex = Math.floor((matchNumber - 1) / 2);
+            const position = (matchNumber - 1) % 2;
 
-            await nextMatch.save();
-            console.log(`Advanced winner to Match ${nextMatch.matchNumber} in Round ${nextMatch.round}`);
+            if (nextMatchIndex < nextRoundMatches.length) {
+                const nextMatch = nextRoundMatches[nextMatchIndex];
+
+                if (position === 0) {
+                    nextMatch.participants[0] = { teamId: new mongoose.Types.ObjectId(winnerId) };
+                } else {
+                    nextMatch.participants[1] = { teamId: new mongoose.Types.ObjectId(winnerId) };
+                }
+
+                const bothFilled = nextMatch.participants[0].teamId && nextMatch.participants[1].teamId;
+                if (bothFilled && nextMatch.status === "pending") {
+                    nextMatch.status = "scheduled";
+                }
+
+                await nextMatch.save();
+                console.log(`Advanced winner to Match ${nextMatch.matchNumber} in Round ${nextMatch.round}`);
+            }
         }
     } catch (error) {
         console.error("Error advancing winner:", error);

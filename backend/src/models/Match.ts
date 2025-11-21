@@ -4,7 +4,7 @@ export interface IMatch extends Document {
     eventId: mongoose.Types.ObjectId;
     round: number;
     participants: {
-        playerId?: mongoose.Types.ObjectId;
+        teamId?: mongoose.Types.ObjectId;
         placeholder?: string;
     }[];
     courtId?: string;
@@ -15,6 +15,7 @@ export interface IMatch extends Document {
     matchCodeId?: mongoose.Types.ObjectId;
     umpireId?: mongoose.Types.ObjectId;
     matchNumber?: number;
+    nextMatchId?: mongoose.Types.ObjectId;
 }
 
 const MatchSchema: Schema = new Schema({
@@ -22,7 +23,7 @@ const MatchSchema: Schema = new Schema({
     round: { type: Number, required: true },
     participants: [
         {
-            playerId: { type: Schema.Types.ObjectId, ref: "Player" },
+            teamId: { type: Schema.Types.ObjectId, ref: "Team" },
             placeholder: { type: String },
         },
     ],
@@ -34,10 +35,11 @@ const MatchSchema: Schema = new Schema({
         enum: ["scheduled", "in_progress", "completed", "pending"],
         default: "pending",
     },
-    winnerId: { type: Schema.Types.ObjectId, ref: "Player" },
+    winnerId: { type: Schema.Types.ObjectId, ref: "Team" },
     matchCodeId: { type: Schema.Types.ObjectId, ref: "MatchCode" },
     umpireId: { type: Schema.Types.ObjectId, ref: "User" },
     matchNumber: { type: Number },
+    nextMatchId: { type: Schema.Types.ObjectId, ref: "Match" },
 });
 
 export default mongoose.model<IMatch>("Match", MatchSchema);

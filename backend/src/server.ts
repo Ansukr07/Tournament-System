@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth"
 import playerRoutes from "./routes/players"
 import eventRoutes from "./routes/events"
 import matchRoutes from "./routes/matches"
+import teamRoutes from "./routes/teams"
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -62,6 +63,7 @@ app.use("/api/auth", authRoutes)
 app.use("/api/players", playerRoutes)
 app.use("/api/events", eventRoutes)
 app.use("/api/matches", matchRoutes)
+app.use("/api/teams", teamRoutes)
 
 // ========================================================================
 // Start Server

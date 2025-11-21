@@ -1,0 +1,230 @@
+﻿Connected to MongoDB
+Database: test
+================================================================================
+
+Total players: 12
+================================================================================
+
+Player 1:
+  Name: Test Player
+  Unique ID: P-1763698134939-a7a0c8
+  Club Name: N/A
+  Club ID: 691fe5d679ad09e4ad99275d
+  Events array: ["691f4f9a44819ed0d3e23501"]
+  Events count: 1
+  Full document: {
+  "_id": "691fe5d679ad09e4ad992760",
+  "name": "Test Player",
+  "uniqueId": "P-1763698134939-a7a0c8",
+  "clubId": "691fe5d679ad09e4ad99275d",
+  "events": [
+    "691f4f9a44819ed0d3e23501"
+  ],
+  "__v": 1
+}
+
+Player 2:
+  Name: Ansu
+  Unique ID: P-1763698329155-9a6c44
+  Club Name: N/A
+  Club ID: 691fe69879ad09e4ad99276a
+  Events array: []
+  Events count: 0
+  Full document: {
+  "_id": "691fe69979ad09e4ad99276d",
+  "name": "Ansu",
+  "uniqueId": "P-1763698329155-9a6c44",
+  "clubId": "691fe69879ad09e4ad99276a",
+  "events": [],
+  "__v": 0
+}
+
+Player 3:
+  Name: Robust Test
+  Unique ID: P-1763698492618-df4a37
+  Club Name: N/A
+  Club ID: 691fe73c79ad09e4ad992779
+  Events array: []
+  Events count: 0
+  Full document: {
+  "_id": "691fe73c79ad09e4ad99277c",
+  "name": "Robust Test",
+  "uniqueId": "P-1763698492618-df4a37",
+  "clubId": "691fe73c79ad09e4ad992779",
+  "events": [],
+  "__v": 0
+}
+
+Player 4:
+  Name: Aditya Banerjee
+  Unique ID: P-1763698592864-b8a749
+  Club Name: N/A
+  Club ID: 691fe69879ad09e4ad99276a
+  Events array: []
+  Events count: 0
+  Full document: {
+  "_id": "691fe7a079ad09e4ad992785",
+  "name": "Aditya Banerjee",
+  "uniqueId": "P-1763698592864-b8a749",
+  "clubId": "691fe69879ad09e4ad99276a",
+  "events": [],
+  "__v": 0
+}
+
+Player 5:
+  Name: Frontend Test
+  Unique ID: P-1763698743496-c02720
+  Club Name: N/A
+  Club ID: 691fe83779ad09e4ad99278a
+  Events array: []
+  Events count: 0
+  Full document: {
+  "_id": "691fe83779ad09e4ad99278d",
+  "name": "Frontend Test",
+  "uniqueId": "P-1763698743496-c02720",
+  "clubId": "691fe83779ad09e4ad99278a",
+  "events": [],
+  "__v": 0
+}
+
+Player 6:
+  Name: Frontend Retry
+  Unique ID: P-1763698888051-c8c590
+  Club Name: N/A
+  Club ID: 691fe8c779ad09e4ad992794
+  Events array: []
+  Events count: 0
+  Full document: {
+  "_id": "691fe8c879ad09e4ad992797",
+  "name": "Frontend Retry",
+  "uniqueId": "P-1763698888051-c8c590",
+  "clubId": "691fe8c779ad09e4ad992794",
+  "events": [],
+  "__v": 0
+}
+
+Player 7:
+  Name: Frontend Final
+  Unique ID: P-1763699041070-27da3e
+  Club Name: N/A
+  Club ID: 691fe96079ad09e4ad99279d
+  Events array: []
+  Events count: 0
+  Full document: {
+  "_id": "691fe96179ad09e4ad9927a0",
+  "name": "Frontend Final",
+  "uniqueId": "P-1763699041070-27da3e",
+  "clubId": "691fe96079ad09e4ad99279d",
+  "events": [],
+  "__v": 0
+}
+
+Player 8:
+  Name: Frontend Debug
+  Unique ID: P-1763699137634-17dcab
+  Club Name: N/A
+  Club ID: 691fe9c179ad09e4ad9927a6
+  Events array: []
+  Events count: 0
+  Full document: {
+  "_id": "691fe9c179ad09e4ad9927a9",
+  "name": "Frontend Debug",
+  "uniqueId": "P-1763699137634-17dcab",
+  "clubId": "691fe9c179ad09e4ad9927a6",
+  "events": [],
+  "__v": 0
+}
+
+Player 9:
+  Name: Frontend Final Retry
+  Unique ID: P-1763699271572-d783f6
+  Club Name: N/A
+  Club ID: 691fea4779ad09e4ad9927af
+  Events array: []
+  Events count: 0
+  Full document: {
+  "_id": "691fea4779ad09e4ad9927b2",
+  "name": "Frontend Final Retry",
+  "uniqueId": "P-1763699271572-d783f6",
+  "clubId": "691fea4779ad09e4ad9927af",
+  "events": [],
+  "__v": 0
+}
+
+Player 10:
+  Name: Manual Test
+  Unique ID: P-1763699943681-aee9c6
+  Club Name: N/A
+  Club ID: 691fece779ad09e4ad9927cd
+  Events array: []
+  Events count: 0
+  Full document: {
+  "_id": "691fece779ad09e4ad9927d0",
+  "name": "Manual Test",
+  "uniqueId": "P-1763699943681-aee9c6",
+  "clubId": "691fece779ad09e4ad9927cd",
+  "events": [],
+  "__v": 0
+}
+
+Player 11:
+  Name: Schema Fix Test
+  Unique ID: P-1763700128963-a9aa03
+  Club Name: N/A
+  Club ID: 691feda079ad09e4ad9927d8
+  Events array: []
+  Events count: 0
+  Full document: {
+  "_id": "691feda079ad09e4ad9927db",
+  "name": "Schema Fix Test",
+  "uniqueId": "P-1763700128963-a9aa03",
+  "clubId": "691feda079ad09e4ad9927d8",
+  "events": [],
+  "__v": 0
+}
+
+Player 12:
+  Name: Final Test
+  Unique ID: P-1763700312873-650023
+  Club Name: N/A
+  Club ID: 691fe96079ad09e4ad99279d
+  Events array: []
+  Events count: 0
+  Full document: {
+  "_id": "691fee5879ad09e4ad9927e4",
+  "name": "Final Test",
+  "uniqueId": "P-1763700312873-650023",
+  "clubId": "691fe96079ad09e4ad99279d",
+  "events": [],
+  "__v": 0
+}
+
+================================================================================
+
+Total events: 2
+================================================================================
+
+Event 1:
+  Name: Test Championship 2025
+  ID: 691f4f9a44819ed0d3e23501
+  Category: Badminton
+  Type: knockout
+
+Event 2:
+  Name: Olympics
+  ID: 691fe4a579ad09e4ad992752
+  Category: Cricket
+  Type: knockout
+
+================================================================================
+
+Testing manual update...
+
+Attempting to add event 691f4f9a44819ed0d3e23501 to player P-1763698134939-a7a0c8
+Events before: ["691f4f9a44819ed0d3e23501"]
+Events after push: ["691f4f9a44819ed0d3e23501","691f4f9a44819ed0d3e23501"]
+Save completed!
+Events after save: ["691f4f9a44819ed0d3e23501","691f4f9a44819ed0d3e23501"]
+Events after refetch: ["691f4f9a44819ed0d3e23501","691f4f9a44819ed0d3e23501"]
+
+Disconnected from MongoDB

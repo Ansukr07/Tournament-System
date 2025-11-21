@@ -2,6 +2,7 @@ import type { Request, Response } from "express"
 import Player from "../models/Player"
 import Club from "../models/Club"
 import crypto from "crypto"
+import mongoose from "mongoose"
 
 export const createPlayer = async (req: Request, res: Response) => {
   try {
@@ -35,6 +36,7 @@ export const createPlayer = async (req: Request, res: Response) => {
     const player = new Player({
       name,
       uniqueId,
+      clubName,
       clubId: club._id,
       events: eventId ? [eventId] : []
     })
@@ -67,10 +69,30 @@ export const getPlayersByEvent = async (req: Request, res: Response) => {
 
 export const registerPlayerToEvent = async (req: Request, res: Response) => {
   try {
-    const { playerId, eventId } = req.body
+    const { playerId, eventId, uniqueId } = req.body
+    console.log("Registering player:", { playerId, eventId, uniqueId });
 
-    const player = await Player.findById(playerId)
+    let player;
+    if (playerId) {
+      player = await Player.findById(playerId)
+    } else if (uniqueId) {
+      const trimmedId = uniqueId.trim();
+      console.log("Searching for uniqueId:", trimmedId);
+
+      // Check if uniqueId is a valid MongoDB ObjectId
+      if (mongoose.Types.ObjectId.isValid(trimmedId)) {
+        player = await Player.findById(trimmedId);
+        console.log("Found by ObjectId:", !!player);
+      }
+      // If not found by ID or not a valid ID, try finding by uniqueId field
+      if (!player) {
+        player = await Player.findOne({ uniqueId: trimmedId })
+        console.log("Found by uniqueId field:", !!player);
+      }
+    }
+
     if (!player) {
+      console.log("Player not found in DB");
       return res.status(404).json({ error: "Player not found" })
     }
 
@@ -79,10 +101,26 @@ export const registerPlayerToEvent = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Player already registered for this event" })
     }
 
-    player.events.push(eventId)
-    await player.save()
+    console.log("Pushing eventId:", eventId);
+    console.log("Events before push:", player.events);
 
-    res.json(player)
+    player.events.push(new mongoose.Types.ObjectId(eventId))
+
+    console.log("Events after push:", player.events);
+    console.log("Player object before save:", JSON.stringify(player.toObject()));
+
+    try {
+      const savedPlayer = await player.save()
+      console.log("Save successful!");
+      console.log("Saved player events:", savedPlayer.events);
+      console.log("Saved player object:", JSON.stringify(savedPlayer.toObject()));
+
+      res.json(savedPlayer)
+    } catch (saveError: any) {
+      console.error("Save error:", saveError);
+      console.error("Save error details:", JSON.stringify(saveError, null, 2));
+      return res.status(500).json({ error: "Failed to save player", details: saveError.message });
+    }
   } catch (error: any) {
     res.status(500).json({ error: "Failed to register player", message: error.message })
   }
