@@ -5,7 +5,8 @@ import Match from "../models/Match";
 import Player from "../models/Player";
 import Team from "../models/Team";
 import { generateKnockoutFixtures, generateRoundRobinFixtures } from "../services/fixtureService";
-import { scheduleMatches } from "../services/schedulingService";
+import { SchedulingEngine } from "../services/schedulingEngine";
+import { generateMatchCodeForMatch } from "../services/matchService";
 
 export const createEvent = async (req: Request, res: Response) => {
   try {
@@ -163,21 +164,67 @@ export const generateFixtures = async (req: Request, res: Response) => {
   }
 };
 
+
+
 export const scheduleEventMatches = async (req: Request, res: Response) => {
   try {
     const eventId = req.params.id;
-    const matches = await scheduleMatches(eventId);
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    if (!event.courts || event.courts.length === 0) {
+      return res.status(400).json({ message: "Event must have at least one court defined" });
+    }
+
+    // Get all unscheduled matches
+    const matches = await Match.find({
+      eventId,
+      status: { $in: ["scheduled", "pending"] },
+      startTime: { $exists: false }
+    });
+
+    if (matches.length === 0) {
+      return res.status(400).json({ message: "No matches to schedule" });
+    }
+
+    // Determine start time (Event start date or tomorrow 9 AM)
+    let startTime = event.startDate ? new Date(event.startDate) : new Date();
+    if (!event.startDate) {
+      startTime.setHours(9, 0, 0, 0);
+      startTime.setDate(startTime.getDate() + 1);
+    }
+
+    // Run scheduling engine
+    const scheduled = SchedulingEngine.scheduleMatches(
+      matches,
+      event.courts,
+      startTime,
+      event.matchDuration || 30,
+      event.bufferMinutes || 10
+    );
+
+    // Save scheduled matches
+    await Promise.all(scheduled.map(m => m.save()));
+
+    // Generate match codes for all scheduled matches
+    console.log("Generating match codes for scheduled matches...");
+    await Promise.all(scheduled.map(m => generateMatchCodeForMatch(m._id.toString())));
 
     res.json({
       message: "Schedule generated successfully",
-      matches,
-      count: matches.length
+      matches: scheduled,
+      count: scheduled.length
     });
   } catch (error: any) {
     console.error("Schedule matches error:", error);
     res.status(500).json({ message: "Error scheduling matches", error: error.message });
   }
 };
+
+import TeamStats from "../models/TeamStats";
 
 export const getEventMatches = async (req: Request, res: Response) => {
   try {
@@ -189,5 +236,17 @@ export const getEventMatches = async (req: Request, res: Response) => {
     res.json(matches);
   } catch (error: any) {
     res.status(500).json({ message: "Error fetching matches", error: error.message });
+  }
+};
+
+export const getEventLeaderboard = async (req: Request, res: Response) => {
+  try {
+    const stats = await TeamStats.find({ eventId: req.params.id })
+      .populate("teamId", "teamName clubName")
+      .sort({ points: -1, goalDifference: -1, won: -1 });
+
+    res.json(stats);
+  } catch (error: any) {
+    res.status(500).json({ message: "Error fetching leaderboard", error: error.message });
   }
 };

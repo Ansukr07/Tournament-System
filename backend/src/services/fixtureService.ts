@@ -56,10 +56,28 @@ export const generateKnockoutFixtures = async (eventId: string) => {
                         { _id: savedMatch._id },
                         { $set: { nextMatchId: nextMatch._id } }
                     ));
+                    // Also set it in memory for auto-advancement logic below
+                    savedMatch.nextMatchId = nextMatch._id;
                 }
             }
         }
         await Promise.all(updates);
+
+        // Auto-advance teams with BYE matches
+        console.log("Checking for BYE matches to auto-advance...");
+        for (const match of savedMatches) {
+            console.log(`Match ${match.matchNumber}: status=${match.status}, hasNextMatch=${!!match.nextMatchId}`);
+            if (match.status === "auto_advance" && match.nextMatchId && match.participants) {
+                // Find the team (not BYE participant)
+                const nonByeParticipant = match.participants.find(p => p.teamId);
+                if (nonByeParticipant?.teamId) {
+                    console.log(`Auto-advancing team ${nonByeParticipant.teamId} from BYE Match ${match.matchNumber} to next round`);
+                    await advanceWinner(match._id.toString(), nonByeParticipant.teamId.toString());
+                } else {
+                    console.log(`No team found in BYE match ${match.matchNumber}`);
+                }
+            }
+        }
 
         console.log(`Created ${savedMatches.length} matches.`);
 
@@ -105,7 +123,7 @@ export const generateRoundRobinFixtures = async (eventId: string) => {
  */
 export const advanceWinner = async (matchId: string, winnerId: string) => {
     try {
-        const match = await Match.findById(matchId);
+        const match = await Match.findById(matchId).populate('eventId');
         if (!match) throw new Error("Match not found");
 
         // If nextMatchId is set, use it directly
@@ -133,6 +151,22 @@ export const advanceWinner = async (matchId: string, winnerId: string) => {
                 const bothFilled = nextMatch.participants[0].teamId && nextMatch.participants[1].teamId;
                 if (bothFilled && nextMatch.status === "pending") {
                     nextMatch.status = "scheduled";
+
+                    // Auto-schedule the next match if it's not already scheduled
+                    if (!nextMatch.startTime && match.eventId) {
+                        const event: any = match.eventId;
+                        const matchDuration = event.matchDuration || 30;
+                        const bufferMinutes = event.bufferMinutes || 10;
+
+                        // Schedule the next match to start after this match ends + buffer
+                        if (match.endTime) {
+                            nextMatch.startTime = new Date(match.endTime.getTime() + bufferMinutes * 60000);
+                            nextMatch.endTime = new Date(nextMatch.startTime.getTime() + matchDuration * 60000);
+                            nextMatch.courtId = match.courtId; // Use same court as current match
+
+                            console.log(`Auto-scheduled Match ${nextMatch.matchNumber} on ${match.courtId} at ${nextMatch.startTime.toLocaleTimeString()}`);
+                        }
+                    }
                 }
 
                 await nextMatch.save();

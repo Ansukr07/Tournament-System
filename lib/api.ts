@@ -162,6 +162,12 @@ export const api = {
         mode: "cors",
       }).then((r) => r.json()),
 
+    getLeaderboard: (eventId: string) =>
+      fetch(`${API_BASE}/events/${eventId}/leaderboard`, {
+        credentials: "include",
+        mode: "cors",
+      }).then((r) => r.json()),
+
     generateFixtures: (eventId: string, token: string) =>
       fetch(`${API_BASE}/events/${eventId}/generate-fixtures`, {
         method: "POST",
@@ -207,16 +213,26 @@ export const api = {
         body: JSON.stringify({ code }),
       }).then((r) => r.json()),
 
-    submitScore: (matchId: string, winnerId: string, token: string) =>
+    submitScore: (matchId: string, winnerId: string, matchCode: string) =>
       fetch(`${API_BASE}/matches/${matchId}/submit-score`, {
         method: "POST",
         credentials: "include",
         mode: "cors",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ winnerId }),
-      }).then((r) => r.json()),
+        body: JSON.stringify({ winnerId, matchCode }),
+      }).then(async (r) => {
+        if (!r.ok) {
+          const text = await r.text();
+          try {
+            const error = JSON.parse(text);
+            throw new Error(error.message || `Request failed with status ${r.status}`);
+          } catch {
+            throw new Error(text || `Request failed with status ${r.status}`);
+          }
+        }
+        return r.json();
+      }),
   },
 }

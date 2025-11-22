@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.get("/", getAllMatches);
 router.get("/:id", getMatchById);
-router.post("/:id/submit-score", authMiddleware, submitScore);
+router.post("/:id/submit-score", submitScore);
 router.post("/:id/generate-code", authMiddleware, generateMatchCode);
 router.post("/:id/verify-code", verifyMatchCode);
 

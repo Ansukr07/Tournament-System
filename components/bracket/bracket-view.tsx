@@ -1,15 +1,17 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { BracketMatch } from "./bracket-match"
+import { MatchResultModal } from "../match-result-modal"
 
 interface Match {
     id: string
-    team1: { name?: string; seed?: number; score?: number; placeholder?: string; isWinner?: boolean }
-    team2: { name?: string; seed?: number; score?: number; placeholder?: string; isWinner?: boolean }
+    team1: { _id?: string; name?: string; seed?: number; score?: number; placeholder?: string; isWinner?: boolean }
+    team2: { _id?: string; name?: string; seed?: number; score?: number; placeholder?: string; isWinner?: boolean }
     winnerId?: string
     status?: string
     matchCode?: string
+    matchNumber?: number
 }
 
 interface Round {
@@ -19,11 +21,29 @@ interface Round {
 
 interface BracketViewProps {
     fixtures: Round[]
+    onRefresh?: () => void
 }
 
-export function BracketView({ fixtures }: BracketViewProps) {
+export function BracketView({ fixtures, onRefresh }: BracketViewProps) {
+    const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
+
     if (!fixtures || fixtures.length === 0) {
         return <div className="text-center text-muted-foreground p-8">No fixtures available</div>
+    }
+
+    const handleMatchClick = (matchId: string) => {
+        // Find match in fixtures
+        for (const round of fixtures) {
+            const match = round.matches.find(m => m.id === matchId)
+            if (match) {
+                // Only allow clicking if match is not completed (or maybe allow editing?)
+                // And only if both teams are present (not TBD)
+                if (match.team1._id && match.team2._id) {
+                    setSelectedMatch(match)
+                }
+                break
+            }
+        }
     }
 
     // Slot-based bracket math constants
@@ -87,10 +107,12 @@ export function BracketView({ fixtures }: BracketViewProps) {
                                             matchIndex={matchIdx}
                                             totalRounds={fixtures.length}
                                             matchCode={match.matchCode}
+                                            matchNumber={match.matchNumber}
                                             status={match.status}
                                             yCenter={yCenter}
                                             roundStride={roundStride}
                                             connectorLength={CONNECTOR_LENGTH}
+                                            onMatchClick={handleMatchClick}
                                         />
                                     </div>
                                 )
@@ -99,6 +121,19 @@ export function BracketView({ fixtures }: BracketViewProps) {
                     )
                 })}
             </div>
+
+            {selectedMatch && selectedMatch.team1._id && selectedMatch.team2._id && (
+                <MatchResultModal
+                    isOpen={!!selectedMatch}
+                    onClose={() => setSelectedMatch(null)}
+                    matchId={selectedMatch.id}
+                    team1={{ _id: selectedMatch.team1._id, name: selectedMatch.team1.name || "Team 1" }}
+                    team2={{ _id: selectedMatch.team2._id, name: selectedMatch.team2.name || "Team 2" }}
+                    onSuccess={() => {
+                        onRefresh?.()
+                    }}
+                />
+            )}
         </div>
     )
 }

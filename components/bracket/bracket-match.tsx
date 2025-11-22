@@ -17,10 +17,12 @@ interface BracketMatchProps {
     totalRounds: number
     className?: string
     matchCode?: string
+    matchNumber?: number
     status?: string
     yCenter: number
     roundStride: number
     connectorLength: number
+    onMatchClick?: (matchId: string) => void
 }
 
 export function BracketMatch({
@@ -32,10 +34,12 @@ export function BracketMatch({
     totalRounds,
     className,
     matchCode,
+    matchNumber,
     status,
     yCenter,
     roundStride,
     connectorLength,
+    onMatchClick,
 }: BracketMatchProps) {
     const isFinal = roundIndex === totalRounds - 1
     const isAutoAdvance = status === "auto_advance"
@@ -48,28 +52,24 @@ export function BracketMatch({
 
     return (
         <div className={cn("relative flex flex-col justify-center w-64", className)}>
-            {/* Match Code Label */}
-            {matchCode && (
+            {/* Match Number Label */}
+            {matchNumber && (
                 <div className="absolute -top-6 left-0 w-full text-center">
-                    <span className={cn(
-                        "text-[10px] font-mono px-2 py-0.5 rounded border",
-                        isAutoAdvance
-                            ? "text-muted-foreground/60 bg-muted/30 border-border/30"
-                            : "text-muted-foreground bg-background/80 border-border"
-                    )}>
-                        {matchCode}
-                        {isAutoAdvance && " • AUTO"}
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded border text-muted-foreground bg-background/80 border-border">
+                        Match {matchNumber}
                     </span>
                 </div>
             )}
 
             {/* Match Box */}
-            <div className={cn(
-                "flex flex-col rounded-md overflow-hidden shadow-sm transition-all",
-                isAutoAdvance
-                    ? "bg-muted/20 border-2 border-dashed border-border/40"
-                    : "bg-card border border-border hover:shadow-md hover:border-accent/50 group"
-            )}>
+            <div
+                onClick={() => onMatchClick?.(matchId)}
+                className={cn(
+                    "flex flex-col rounded-md overflow-hidden shadow-sm transition-all cursor-pointer",
+                    isAutoAdvance
+                        ? "bg-muted/20 border-2 border-dashed border-border/40"
+                        : "bg-card border border-border hover:shadow-md hover:border-accent/50 group"
+                )}>
                 {/* Team 1 */}
                 <div className={cn(
                     "flex items-center justify-between px-3 py-2 border-b border-border/50 transition-colors",

@@ -1,7 +1,8 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { cn } from "@/lib/utils"
+import { MatchResultModal } from "../match-result-modal"
 
 interface Match {
     _id: string
@@ -9,7 +10,7 @@ interface Match {
     matchNumber?: number
     matchCode?: string
     participants: Array<{
-        teamId?: { teamName?: string; _id?: string; seed?: number }
+        teamId?: { teamName?: string; _id?: string; seed?: number; clubName?: string }
         placeholder?: string
     }>
     status?: string
@@ -19,9 +20,12 @@ interface Match {
 
 interface RoundRobinViewProps {
     matches: Match[]
+    onRefresh?: () => void
 }
 
-export function RoundRobinView({ matches }: RoundRobinViewProps) {
+export function RoundRobinView({ matches, onRefresh }: RoundRobinViewProps) {
+    const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
+
     if (!matches || matches.length === 0) {
         return <div className="text-center text-muted-foreground p-8">No fixtures available</div>
     }
@@ -38,6 +42,13 @@ export function RoundRobinView({ matches }: RoundRobinViewProps) {
 
     const rounds = Object.keys(matchesByRound).map(Number).sort((a, b) => a - b)
 
+    const handleMatchClick = (match: Match) => {
+        // Only allow clicking if both teams are present
+        if (match.participants[0]?.teamId?._id && match.participants[1]?.teamId?._id) {
+            setSelectedMatch(match)
+        }
+    }
+
     return (
         <div className="w-full rounded-lg border bg-background/50 p-4 overflow-x-auto">
             <div className="flex gap-16 p-8">
@@ -53,16 +64,20 @@ export function RoundRobinView({ matches }: RoundRobinViewProps) {
                             {matchesByRound[roundNum].map(match => (
                                 <div key={match._id} className="relative flex flex-col justify-center w-64">
                                     {/* Match Code Label */}
-                                    {match.matchCode && (
+                                    {/* Match Number Label */}
+                                    {match.matchNumber && (
                                         <div className="absolute -top-6 left-0 w-full text-center">
                                             <span className="text-[10px] font-mono px-2 py-0.5 rounded border text-muted-foreground bg-background/80 border-border">
-                                                {match.matchCode}
+                                                Match {match.matchNumber}
                                             </span>
                                         </div>
                                     )}
 
                                     {/* Match Box */}
-                                    <div className="flex flex-col rounded-md overflow-hidden shadow-sm transition-all bg-card border border-border hover:shadow-md hover:border-accent/50 group">
+                                    <div
+                                        onClick={() => handleMatchClick(match)}
+                                        className="flex flex-col rounded-md overflow-hidden shadow-sm transition-all bg-card border border-border hover:shadow-md hover:border-accent/50 group cursor-pointer"
+                                    >
                                         {/* Team 1 */}
                                         <div className="flex items-center justify-between px-3 py-2 border-b border-border/50 transition-colors">
                                             <div className="flex items-center gap-3 overflow-hidden">
@@ -116,6 +131,25 @@ export function RoundRobinView({ matches }: RoundRobinViewProps) {
                     </div>
                 ))}
             </div>
+
+            {selectedMatch && selectedMatch.participants[0]?.teamId?._id && selectedMatch.participants[1]?.teamId?._id && (
+                <MatchResultModal
+                    isOpen={!!selectedMatch}
+                    onClose={() => setSelectedMatch(null)}
+                    matchId={selectedMatch._id}
+                    team1={{
+                        _id: selectedMatch.participants[0].teamId._id,
+                        name: selectedMatch.participants[0].teamId.teamName || "Team 1"
+                    }}
+                    team2={{
+                        _id: selectedMatch.participants[1].teamId._id,
+                        name: selectedMatch.participants[1].teamId.teamName || "Team 2"
+                    }}
+                    onSuccess={() => {
+                        onRefresh?.()
+                    }}
+                />
+            )}
         </div>
     )
 }

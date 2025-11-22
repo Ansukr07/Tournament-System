@@ -3,7 +3,7 @@ import Match from "../models/Match";
 import MatchCode from "../models/MatchCode";
 import crypto from "crypto";
 import { io } from "../server";
-import { completeMatch } from "../services/matchService";
+import { completeMatch, generateMatchCodeForMatch } from "../services/matchService";
 
 export const submitScore = async (req: Request, res: Response) => {
   try {
@@ -51,37 +51,13 @@ export const generateMatchCode = async (req: Request, res: Response) => {
     const matchId = req.params.id;
     const { umpireId } = req.body; // Admin assigns umpire
 
-    const match = await Match.findById(matchId);
-    if (!match) {
-      return res.status(404).json({ message: "Match not found" });
-    }
-
-    // Generate 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const codeHash = crypto.createHash("sha256").update(code).digest("hex");
-
-    // Delete any existing codes for this match
-    await MatchCode.deleteMany({ matchId });
-
-    const matchCode = new MatchCode({
-      matchId,
-      codeHash,
-      expiresAt: new Date(Date.now() + 60 * 60000), // 1 hour expiry
-    });
-
-    await matchCode.save();
-
-    // Assign umpire to match if provided
-    if (umpireId) {
-      match.umpireId = umpireId;
-      await match.save();
-    }
+    const result = await generateMatchCodeForMatch(matchId, umpireId);
 
     res.json({
-      code,
-      expiresAt: matchCode.expiresAt,
-      matchId: match._id,
-      matchNumber: match.matchNumber
+      code: result.code,
+      expiresAt: result.expiresAt,
+      matchId: result.match._id,
+      matchNumber: result.match.matchNumber
     });
   } catch (error: any) {
     res.status(500).json({ message: "Error generating code", error: error.message });
@@ -111,7 +87,7 @@ export const verifyMatchCode = async (req: Request, res: Response) => {
 
     // Return match details if code is valid
     const match = await Match.findById(matchId)
-      .populate("participants.playerId")
+      .populate("participants.teamId")
       .populate("eventId");
 
     res.json({
@@ -127,7 +103,7 @@ export const verifyMatchCode = async (req: Request, res: Response) => {
 export const getMatchById = async (req: Request, res: Response) => {
   try {
     const match = await Match.findById(req.params.id)
-      .populate("participants.playerId")
+      .populate("participants.teamId")
       .populate("winnerId")
       .populate("eventId")
       .populate("umpireId");
@@ -151,7 +127,7 @@ export const getAllMatches = async (req: Request, res: Response) => {
     if (status) filter.status = status;
 
     const matches = await Match.find(filter)
-      .populate("participants.playerId")
+      .populate("participants.teamId")
       .populate("winnerId")
       .populate("eventId")
       .sort({ round: 1, matchNumber: 1 });

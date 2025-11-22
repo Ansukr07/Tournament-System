@@ -8,11 +8,12 @@ import { api } from "@/lib/api"
 import { initSocket, onEvent, offEvent } from "@/lib/socket"
 import { BracketView } from "@/components/bracket/bracket-view"
 import { RoundRobinView } from "@/components/bracket/round-robin-view"
+import { LeaderboardView } from "@/components/leaderboard-view"
 
 export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const eventId = resolvedParams.id
-  const [selectedTab, setSelectedTab] = useState<"overview" | "teams" | "fixtures" | "schedule">("overview")
+  const [selectedTab, setSelectedTab] = useState<"overview" | "teams" | "fixtures" | "schedule" | "leaderboard">("overview")
   const [event, setEvent] = useState<any>(null)
   const [matches, setMatches] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -61,12 +62,17 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     try {
       const token = localStorage.getItem("token")
       if (!token) return alert("Please login first")
-      await api.events.schedule(eventId, token)
+
+      console.log("Generating schedule...")
+      const scheduleRes = await api.events.schedule(eventId, token)
+      console.log("Schedule response:", scheduleRes)
+
       const matchesData = await api.events.getMatches(eventId)
+      console.log("Fetched matches:", matchesData)
       setMatches(matchesData)
       alert("Schedule generated!")
     } catch (e) {
-      console.error(e)
+      console.error("Schedule error:", e)
       alert("Error generating schedule")
     }
   }
@@ -112,7 +118,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             { label: "Overview", value: "overview" },
             { label: "Participating Teams", value: "teams" },
             { label: "Fixtures", value: "fixtures" },
-            { label: "Schedule", value: "schedule" }
+            { label: "Schedule", value: "schedule" },
+            { label: "Leaderboard", value: "leaderboard" }
           ].map((tab) => (
             <button
               key={tab.value}
@@ -239,9 +246,19 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                   No fixtures generated yet.
                 </p>
               ) : event.type === "round_robin" ? (
-                <RoundRobinView matches={matches} />
+                <RoundRobinView
+                  matches={matches}
+                  onRefresh={() => {
+                    api.events.getMatches(eventId).then(setMatches)
+                  }}
+                />
               ) : (
-                <BracketView fixtures={transformMatchesToBracket(matches)} />
+                <BracketView
+                  fixtures={transformMatchesToBracket(matches)}
+                  onRefresh={() => {
+                    api.events.getMatches(eventId).then(setMatches)
+                  }}
+                />
               )}
             </Card>
           )}
@@ -252,30 +269,47 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                 <h2 className="text-xl font-bold">Schedule</h2>
                 <Button onClick={handleSchedule} className="bg-accent hover:bg-accent/90">Generate Schedule</Button>
               </div>
-              {matches.filter((m: any) => m.startTime).length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  No schedule generated yet.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {matches.filter((m: any) => m.startTime).map((match: any) => (
-                    <div key={match._id} className="p-4 border rounded-lg flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold">Court: {match.courtId}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(match.startTime).toLocaleTimeString()} - {new Date(match.endTime).toLocaleTimeString()}
-                        </p>
+              {(() => {
+                const scheduledMatches = matches.filter((m: any) => m.startTime);
+                console.log("Render - All matches:", matches.length);
+                console.log("Render - Scheduled matches:", scheduledMatches.length);
+
+                if (scheduledMatches.length === 0) {
+                  return (
+                    <p className="text-muted-foreground text-center py-8">
+                      No schedule generated yet.
+                    </p>
+                  );
+                }
+
+                return (
+                  <div className="space-y-4">
+                    {scheduledMatches.map((match: any) => (
+                      <div key={match._id} className="p-4 border rounded-lg flex justify-between items-center">
+                        <div>
+                          <p className="font-semibold">Court: {match.courtId}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(match.startTime).toLocaleTimeString()} - {new Date(match.endTime).toLocaleTimeString()}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm">
+                            {match.participants[0]?.teamId?.teamName || match.participants[0]?.playerId?.name || "TBD"} vs {match.participants[1]?.teamId?.teamName || match.participants[1]?.playerId?.name || "TBD"}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm">
-                          {match.participants[0]?.teamId?.teamName || match.participants[0]?.playerId?.name || "TBD"} vs {match.participants[1]?.teamId?.teamName || match.participants[1]?.playerId?.name || "TBD"}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                );
+              })()}
             </Card>
+          )}
+
+          {selectedTab === "leaderboard" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold">Tournament Standings</h2>
+              <LeaderboardView eventId={eventId} />
+            </div>
           )}
         </div>
       </div>
@@ -305,12 +339,14 @@ function transformMatchesToBracket(matches: any[]) {
         matches: sortedMatches.map((m) => ({
           id: m._id,
           team1: {
+            _id: m.participants[0]?.teamId?._id,
             name: m.participants[0]?.teamId?.teamName || m.participants[0]?.placeholder || "TBD",
             seed: m.participants[0]?.teamId?.seed, // Assuming seed might be available later
             score: m.team1Score,
             isWinner: m.winnerId && m.participants[0]?.teamId?._id === m.winnerId._id
           },
           team2: {
+            _id: m.participants[1]?.teamId?._id,
             name: m.participants[1]?.teamId?.teamName || m.participants[1]?.placeholder || "TBD",
             seed: m.participants[1]?.teamId?.seed,
             score: m.team2Score,
@@ -318,7 +354,8 @@ function transformMatchesToBracket(matches: any[]) {
           },
           status: m.status,
           winnerId: m.winnerId?._id,
-          matchCode: m.matchCode // Map matchCode
+          matchCode: m.matchCode, // Map matchCode
+          matchNumber: m.matchNumber // Add matchNumber
         }))
       }
     })

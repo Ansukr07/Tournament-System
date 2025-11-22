@@ -6,6 +6,7 @@ import {
   generateFixtures,
   scheduleEventMatches,
   getEventMatches,
+  getEventLeaderboard,
 } from "../controllers/eventController";
 import { authMiddleware } from "../middleware/authMiddleware";
 
@@ -15,6 +16,7 @@ router.post("/", authMiddleware, createEvent);
 router.get("/", getEvents);
 router.get("/:id", getEventById);
 router.get("/:id/matches", getEventMatches);
+router.get("/:id/leaderboard", getEventLeaderboard);
 router.post("/:id/generate-fixtures", authMiddleware, generateFixtures);
 router.post("/:id/schedule", authMiddleware, scheduleEventMatches);
 
