@@ -49,6 +49,56 @@ MongoDB (Database)
 
 ---
 
+## 📁 Project Structure
+
+```
+Tournament-System/
+├── frontend/           # Next.js Frontend
+│   ├── app/           # Next.js app router
+│   ├── components/    # React components
+│   ├── lib/          # Utilities & API client
+│   ├── public/       # Static assets
+│   └── package.json
+│
+├── backend/          # Express Backend
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   └── server.ts
+│   └── package.json
+│
+└── README.md
+```
+
+---
+
+## 🛠️ Installation & Setup
+
+### Prerequisites
+- Node.js 18+
+- MongoDB Atlas account (or local MongoDB)
+
+### Backend Setup
+```bash
+cd backend
+npm install
+# Create .env file with MONGODB_URI and JWT_SECRET
+npm run dev
+```
+
+### Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend will run on `http://localhost:3000` and backend on `http://localhost:5000`.
+
+---
+
 ## ⚙️ 3. Core Modules
 
 ### **A. Fixture Engine**
