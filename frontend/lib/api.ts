@@ -1,4 +1,4 @@
-const API_BASE = "https://tournament-system-ou4e.onrender.com/api";
+const API_BASE = "http://localhost:5000/api";
 export const api = {
   // ---------------- AUTH ----------------
   auth: {
