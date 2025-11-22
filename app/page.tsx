@@ -1,7 +1,6 @@
 import { Navbar } from "@/components/navbar"
 import { HeroSection } from "@/components/hero-section"
 import { EventsGrid } from "@/components/events-grid"
-import { LeaderboardPreview } from "@/components/leaderboard-preview"
 
 export default function HomePage() {
   return (
@@ -9,7 +8,6 @@ export default function HomePage() {
       <Navbar />
       <HeroSection />
       <EventsGrid />
-      <LeaderboardPreview />
     </div>
   )
 }

@@ -37,12 +37,12 @@ export function Navbar() {
             <Link href="/events" className="text-sm text-muted-foreground hover:text-foreground transition">
               Events
             </Link>
-            <Link href="/leaderboard" className="text-sm text-muted-foreground hover:text-foreground transition">
-              Leaderboard
+            <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition">
+              About Us
             </Link>
-            <Link href="/demo" className="text-sm text-muted-foreground hover:text-foreground transition">
+            <a href="https://drive.google.com/file/d/1pMMS2Oezzi9IuS900d02C9Azqua7uQ4Z/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground transition">
               Demo
-            </Link>
+            </a>
             {token && (
               <Link href="/admin/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition">
                 Admin Dashboard

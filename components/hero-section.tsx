@@ -30,9 +30,11 @@ export function HeroSection() {
                   Create Tournament
                 </Button>
               </Link>
-              <Button variant="outline" className="h-12 px-8 bg-transparent">
-                Watch Demo
-              </Button>
+              <a href="https://drive.google.com/file/d/1pMMS2Oezzi9IuS900d02C9Azqua7uQ4Z/view?usp=sharing" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" className="h-12 px-8 bg-transparent">
+                  Watch Demo
+                </Button>
+              </a>
             </div>
           </div>
           <div className="relative bg-card rounded-lg border border-border p-8 h-80 overflow-hidden">
