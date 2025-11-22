@@ -19,23 +19,9 @@ const io = new Server(server, { cors: { origin: "*" } })
 // ========================================================================
 // 🔥 FIXED CORS CONFIG (Required for frontend to send Authorization token)
 // ========================================================================
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://tournament-system-kohl.vercel.app"
-];
-
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: "http://localhost:3000",   // YOUR FRONTEND URL
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
