@@ -7,6 +7,7 @@ import { Navbar } from "@/components/navbar"
 import { api } from "@/lib/api"
 import { initSocket, onEvent, offEvent } from "@/lib/socket"
 import { BracketView } from "@/components/bracket/bracket-view"
+import { RoundRobinView } from "@/components/bracket/round-robin-view"
 
 export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
@@ -208,7 +209,20 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground text-center">
-                  Don't have a Team ID? <a href="/teams/register" className="text-accent hover:underline">Register a new team</a>
+                  Don't have a Team ID?{" "}
+                  <button
+                    onClick={() => {
+                      const token = localStorage.getItem('token')
+                      if (!token) {
+                        window.location.href = '/auth/login'
+                      } else {
+                        window.location.href = '/teams/register'
+                      }
+                    }}
+                    className="text-accent hover:underline cursor-pointer bg-transparent border-none p-0"
+                  >
+                    Register a new team
+                  </button>
                 </p>
               </div>
             </Card>
@@ -224,6 +238,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                 <p className="text-muted-foreground text-center py-8">
                   No fixtures generated yet.
                 </p>
+              ) : event.type === "round_robin" ? (
+                <RoundRobinView matches={matches} />
               ) : (
                 <BracketView fixtures={transformMatchesToBracket(matches)} />
               )}

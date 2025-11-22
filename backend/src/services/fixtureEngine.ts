@@ -303,35 +303,98 @@ export class FixtureEngine {
     }
   }
 
-  // Keep the Round Robin generator as is
+  /**
+   * Generate Round Robin fixtures using Circle Method
+   * 
+   * Circle Method ensures:
+   * - Each team plays every other team exactly once
+   * - Proper rotation with first position fixed
+   * - BYE handling for odd number of teams
+   * 
+   * For N teams:
+   * - If odd: insert BYE, total rounds = N
+   * - If even: total rounds = N-1
+   * - Matches per round = N/2 (or (N+1)/2 for odd)
+   * 
+   * @param participants List of teams
+   * @param eventId Event ID
+   * @returns Array of match objects
+   */
   static generateRoundRobin(participants: IParticipant[], eventId: string): Partial<IMatch>[] {
     const matches: Partial<IMatch>[] = [];
     const n = participants.length;
-    if (n < 2) return matches;
 
-    const players = [...participants];
-    const maxRounds = n - 1;
-
-    for (let r = 0; r < maxRounds; r++) {
-      for (let i = 0; i < Math.floor(n / 2); i++) {
-        const p1 = players[i];
-        const p2 = players[n - 1 - i];
-        if (p1._id !== p2._id) {
-          matches.push({
-            eventId: eventId as any,
-            round: r + 1,
-            participants: [
-              { teamId: p1._id as any },
-              { teamId: p2._id as any },
-            ],
-            status: "scheduled",
-          });
-        }
-      }
-      // Rotate
-      const last = players.pop();
-      if (last) players.splice(1, 0, last);
+    if (n < 2) {
+      console.log('[RR] Less than 2 teams, no matches generated');
+      return matches;
     }
+
+    // Clone participants array
+    let teams = [...participants];
+
+    // Insert BYE for odd number of teams
+    const hasBye = n % 2 === 1;
+    if (hasBye) {
+      teams.push({ _id: 'BYE' as any, name: 'BYE' } as IParticipant);
+      console.log(`[RR] Odd team count (${n}), inserted BYE`);
+    }
+
+    const totalTeams = teams.length; // Will be N+1 if odd, N if even
+    const rounds = totalTeams - 1; // Always N-1 for the adjusted count
+    const matchesPerRound = Math.floor(totalTeams / 2);
+
+    console.log(`[RR] Generating fixtures for ${n} teams (${totalTeams} with BYE if needed)`);
+    console.log(`[RR] Rounds: ${rounds}, Matches per round: ${matchesPerRound}`);
+
+    let matchNumber = 1;
+
+    // Generate matches for each round
+    for (let round = 0; round < rounds; round++) {
+      console.log(`[RR] Round ${round + 1} pairings:`);
+
+      for (let i = 0; i < matchesPerRound; i++) {
+        const home = teams[i];
+        const away = teams[totalTeams - 1 - i];
+
+        // Skip matches involving BYE
+        if (home._id === 'BYE' || away._id === 'BYE') {
+          console.log(`  Skipping: ${home.name} vs ${away.name} (BYE match)`);
+          continue;
+        }
+
+        console.log(`  M${matchNumber}: ${home.name} vs ${away.name}`);
+
+        matches.push({
+          eventId: eventId as any,
+          round: round + 1,
+          matchNumber: matchNumber,
+          matchCode: `M${matchNumber}`,
+          participants: [
+            { teamId: home._id as any },
+            { teamId: away._id as any }
+          ],
+          status: 'scheduled'
+        });
+
+        matchNumber++;
+      }
+
+      // Circle rotation: keep first team (position 0) fixed, rotate the rest
+      // Remove last team and insert it at position 1
+      if (round < rounds - 1) { // Don't rotate after last round
+        const lastTeam = teams.pop()!;
+        teams.splice(1, 0, lastTeam);
+      }
+    }
+
+    console.log(`[RR] Generated ${matches.length} total matches`);
+
+    // Verify: for N teams, should have N*(N-1)/2 matches
+    const expectedMatches = (n * (n - 1)) / 2;
+    if (matches.length !== expectedMatches) {
+      console.warn(`[RR] WARNING: Expected ${expectedMatches} matches but generated ${matches.length}`);
+    }
+
     return matches;
   }
 }

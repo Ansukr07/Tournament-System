@@ -186,26 +186,194 @@ describe("FixtureEngine - New Knockout Algorithm", () => {
     });
   });
 
-  describe("Round Robin Fixture Generation", () => {
-    const mockTeams: IParticipant[] = [
-      { _id: "1", name: "Team 1" } as any,
-      { _id: "2", name: "Team 2" } as any,
-      { _id: "3", name: "Team 3" } as any,
-      { _id: "4", name: "Team 4" } as any,
-    ];
+  describe("Round Robin Fixture Generation - Circle Method", () => {
+    test("2 teams: 1 round, 1 match", () => {
+      const teams: IParticipant[] = [
+        { _id: "1", name: "Team 1" } as any,
+        { _id: "2", name: "Team 2" } as any
+      ];
 
-    test("Generate round-robin fixtures", () => {
-      const matches = FixtureEngine.generateRoundRobin(mockTeams, "event1");
+      const matches = FixtureEngine.generateRoundRobin(teams, "event1");
 
-      // For 4 teams: (n-1) rounds * n/2 matches per round = 3 * 2 = 6 matches
-      expect(matches.length).toBe(6);
-      expect(matches.every((m) => m.participants?.length === 2)).toBe(true);
+      expect(matches.length).toBe(1); // n*(n-1)/2 = 2*1/2 = 1
+      expect(matches[0].round).toBe(1);
+      expect(matches[0].matchNumber).toBe(1);
+      expect(matches[0].matchCode).toBe("M1");
     });
 
-    test("Generate fixtures with odd number of participants", () => {
-      const oddTeams = mockTeams.slice(0, 3);
-      const matches = FixtureEngine.generateRoundRobin(oddTeams, "event1");
-      expect(matches.length).toBeGreaterThan(0);
+    test("3 teams: 3 rounds, 3 matches total", () => {
+      const teams: IParticipant[] = [
+        { _id: "1", name: "Team 1" } as any,
+        { _id: "2", name: "Team 2" } as any,
+        { _id: "3", name: "Team 3" } as any
+      ];
+
+      const matches = FixtureEngine.generateRoundRobin(teams, "event1");
+
+      // Expected: 3*(3-1)/2 = 3 matches
+      expect(matches.length).toBe(3);
+
+      // Verify rounds
+      const rounds = new Set(matches.map(m => m.round));
+      expect(rounds.size).toBe(3); // Should span 3 rounds
+
+      // Verify no duplicates
+      const pairings = matches.map(m => {
+        const ids = m.participants!.map(p => p.teamId).sort();
+        return ids.join("-");
+      });
+      expect(new Set(pairings).size).toBe(3); // All unique
+
+      // Verify each team plays 2 matches
+      const teamMatchCount = new Map<string, number>();
+      matches.forEach(m => {
+        m.participants!.forEach(p => {
+          const id = String(p.teamId);
+          teamMatchCount.set(id, (teamMatchCount.get(id) || 0) + 1);
+        });
+      });
+      teamMatchCount.forEach(count => expect(count).toBe(2));
+    });
+
+    test("5 teams: 5 rounds, 10 matches total", () => {
+      const teams: IParticipant[] = [
+        { _id: "1", name: "Team 1" } as any,
+        { _id: "2", name: "Team 2" } as any,
+        { _id: "3", name: "Team 3" } as any,
+        { _id: "4", name: "Team 4" } as any,
+        { _id: "5", name: "Team 5" } as any
+      ];
+
+      const matches = FixtureEngine.generateRoundRobin(teams, "event1");
+
+      // Expected: 5*(5-1)/2 = 10 matches
+      expect(matches.length).toBe(10);
+
+      // Verify rounds (odd teams need N rounds, not N-1)
+      const rounds = new Set(matches.map(m => m.round));
+      expect(rounds.size).toBe(5);
+
+      // Verify no duplicates
+      const pairings = new Set(matches.map(m => {
+        const ids = m.participants!.map(p => p.teamId).sort();
+        return ids.join("-");
+      }));
+      expect(pairings.size).toBe(10);
+
+      // Verify each team plays 4 matches (N-1)
+      const teamMatchCount = new Map<string, number>();
+      matches.forEach(m => {
+        m.participants!.forEach(p => {
+          const id = String(p.teamId);
+          teamMatchCount.set(id, (teamMatchCount.get(id) || 0) + 1);
+        });
+      });
+      teamMatchCount.forEach(count => expect(count).toBe(4));
+
+      // Verify no BYE in any match
+      matches.forEach(m => {
+        m.participants!.forEach(p => {
+          expect(p.teamId).not.toBe("BYE");
+        });
+      });
+    });
+
+    test("8 teams: 7 rounds, 28 matches total", () => {
+      const teams: IParticipant[] = Array.from({ length: 8 }, (_, i) => ({
+        _id: String(i + 1),
+        name: `Team ${i + 1}`
+      } as any));
+
+      const matches = FixtureEngine.generateRoundRobin(teams, "event1");
+
+      // Expected: 8*(8-1)/2 = 28 matches
+      expect(matches.length).toBe(28);
+
+      // Verify rounds
+      const rounds = new Set(matches.map(m => m.round));
+      expect(rounds.size).toBe(7);
+
+      // Verify each round has 4 matches (N/2)
+      for (let r = 1; r <= 7; r++) {
+        const roundMatches = matches.filter(m => m.round === r);
+        expect(roundMatches.length).toBe(4);
+      }
+
+      // Verify all pairings are unique
+      const pairings = new Set(matches.map(m => {
+        const ids = m.participants!.map(p => p.teamId).sort();
+        return ids.join("-");
+      }));
+      expect(pairings.size).toBe(28);
+
+      // Verify each team plays 7 matches
+      const teamMatchCount = new Map<string, number>();
+      matches.forEach(m => {
+        m.participants!.forEach(p => {
+          const id = String(p.teamId);
+          teamMatchCount.set(id, (teamMatchCount.get(id) || 0) + 1);
+        });
+      });
+      teams.forEach(t => {
+        expect(teamMatchCount.get(String(t._id))).toBe(7);
+      });
+    });
+
+    test("7 teams: proper BYE handling", () => {
+      const teams: IParticipant[] = Array.from({ length: 7 }, (_, i) => ({
+        _id: String(i + 1),
+        name: `Team ${i + 1}`
+      } as any));
+
+      const matches = FixtureEngine.generateRoundRobin(teams, "event1");
+
+      // Expected: 7*(7-1)/2 = 21 matches
+      expect(matches.length).toBe(21);
+
+      // Verify no BYE in participants
+      matches.forEach(m => {
+        m.participants!.forEach(p => {
+          expect(p.teamId).not.toBe("BYE");
+        });
+      });
+
+      // Verify 7 rounds (odd teams)
+      const rounds = new Set(matches.map(m => m.round));
+      expect(rounds.size).toBe(7);
+    });
+
+    test("All matches have 2 participants", () => {
+      const teams: IParticipant[] = [
+        { _id: "1", name: "Team 1" } as any,
+        { _id: "2", name: "Team 2" } as any,
+        { _id: "3", name: "Team 3" } as any,
+        { _id: "4", name: "Team 4" } as any
+      ];
+
+      const matches = FixtureEngine.generateRoundRobin(teams, "event1");
+
+      expect(matches.every(m => m.participants?.length === 2)).toBe(true);
+      expect(matches.every(m => m.status === "scheduled")).toBe(true);
+    });
+
+    test("Sequential match numbering", () => {
+      const teams: IParticipant[] = [
+        { _id: "1", name: "Team 1" } as any,
+        { _id: "2", name: "Team 2" } as any,
+        { _id: "3", name: "Team 3" } as any,
+        { _id: "4", name: "Team 4" } as any
+      ];
+
+      const matches = FixtureEngine.generateRoundRobin(teams, "event1");
+
+      // Match numbers should be 1, 2, 3, 4, 5, 6
+      const matchNumbers = matches.map(m => m.matchNumber).sort((a, b) => a! - b!);
+      expect(matchNumbers).toEqual([1, 2, 3, 4, 5, 6]);
+
+      // Match codes should match
+      matches.forEach(m => {
+        expect(m.matchCode).toBe(`M${m.matchNumber}`);
+      });
     });
   });
 });
