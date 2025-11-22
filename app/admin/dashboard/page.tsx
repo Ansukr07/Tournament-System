@@ -36,17 +36,53 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [events, players] = await Promise.all([api.events.list(), api.players.list()])
+        console.log('[Dashboard] Fetching stats...')
+        const [eventsRes, teamsRes] = await Promise.all([
+          api.events.list(),
+          api.teams.list()
+        ])
+
+        console.log('[Dashboard] Events received:', eventsRes)
+        console.log('[Dashboard] Teams received:', teamsRes)
+
+        // Fetch all matches to count upcoming ones
+        let upcomingCount = 0
+        if (eventsRes && Array.isArray(eventsRes)) {
+          for (const event of eventsRes) {
+            try {
+              const matchesRes = await api.events.getMatches(event._id)
+              if (matchesRes && Array.isArray(matchesRes)) {
+                upcomingCount += matchesRes.filter((m: any) =>
+                  m.status === "scheduled" || m.status === "pending"
+                ).length
+              }
+            } catch (err) {
+              console.error(`[Dashboard] Error fetching matches for event ${event._id}:`, err)
+            }
+          }
+        }
+
+        const events = Array.isArray(eventsRes) ? eventsRes : []
+        const teams = Array.isArray(teamsRes) ? teamsRes : []
+
         setStats({
           totalEvents: events.length,
           activeEvents: events.filter((e: any) => e.status === "active").length,
-          totalPlayers: players.length,
-          upcomingMatches: 0,
+          totalPlayers: teams.length, // Showing teams count in "Total Players" card
+          upcomingMatches: upcomingCount,
         })
-        // Sort by creation date (assuming _id roughly correlates or backend sorts) and take top 5
+
+        // Sort by creation date and take top 5
         setRecentEvents(events.slice(0, 5))
+
+        console.log('[Dashboard] Stats updated:', {
+          totalEvents: events.length,
+          activeEvents: events.filter((e: any) => e.status === "active").length,
+          totalTeams: teams.length,
+          upcomingMatches: upcomingCount
+        })
       } catch (error) {
-        console.error("[v0] Error fetching stats:", error)
+        console.error("[Dashboard] Error fetching stats:", error)
       } finally {
         setLoading(false)
       }
@@ -94,7 +130,7 @@ export default function AdminDashboardPage() {
           <Card className="p-6 border border-border hover:border-accent transition">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Players</p>
+                <p className="text-sm text-muted-foreground mb-1">Total Teams</p>
                 <p className="text-3xl font-bold">{stats.totalPlayers}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">

@@ -65,7 +65,7 @@ export default function EventsPage() {
 
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-muted-foreground text-xs mb-1">Participants</p>
+                    <p className="text-muted-foreground text-xs mb-1">Participating Teams</p>
                     {/* Use participantCount if available, otherwise fallback to array length or 0 */}
                     <p className="text-lg font-semibold">{event.participantCount ?? event.participants?.length ?? 0}</p>
                   </div>

@@ -103,6 +103,15 @@ export default function LoginPage() {
             </Button>
           </form>
 
+          <div className="mt-6 p-4 rounded-lg bg-accent/10 border border-accent/20">
+            <h3 className="text-sm font-semibold mb-2 text-accent">Demo Credentials</h3>
+            <div className="text-xs space-y-1 text-foreground/80">
+              <p><span className="font-medium">Role:</span> Admin</p>
+              <p><span className="font-medium">Email:</span> admin@example.com</p>
+              <p><span className="font-medium">Password:</span> admin123</p>
+            </div>
+          </div>
+
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
             <a href="/auth/register" className="text-accent hover:underline font-medium">

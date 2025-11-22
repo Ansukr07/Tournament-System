@@ -11,7 +11,7 @@ import { BracketView } from "@/components/bracket/bracket-view"
 export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const eventId = resolvedParams.id
-  const [selectedTab, setSelectedTab] = useState<"overview" | "participants" | "fixtures" | "schedule">("overview")
+  const [selectedTab, setSelectedTab] = useState<"overview" | "teams" | "fixtures" | "schedule">("overview")
   const [event, setEvent] = useState<any>(null)
   const [matches, setMatches] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -107,16 +107,21 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
         {/* Tabs */}
         <div className="flex gap-4 mb-8 border-b border-border">
-          {["overview", "participants", "fixtures", "schedule"].map((tab) => (
+          {[
+            { label: "Overview", value: "overview" },
+            { label: "Participating Teams", value: "teams" },
+            { label: "Fixtures", value: "fixtures" },
+            { label: "Schedule", value: "schedule" }
+          ].map((tab) => (
             <button
-              key={tab}
-              onClick={() => setSelectedTab(tab as typeof selectedTab)}
-              className={`px-4 py-2 font-medium border-b-2 -mb-[2px] transition capitalize ${selectedTab === tab
+              key={tab.value}
+              onClick={() => setSelectedTab(tab.value as typeof selectedTab)}
+              className={`px-4 py-2 font-medium border-b-2 -mb-[2px] transition ${selectedTab === tab.value
                 ? "border-accent text-accent"
                 : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
             >
-              {tab}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -139,7 +144,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             </Card>
           )}
 
-          {selectedTab === "participants" && (
+          {selectedTab === "teams" && (
             <Card className="p-6 border border-border">
               <h2 className="text-xl font-bold mb-4">Registered Teams</h2>
               <p className="text-muted-foreground text-center mb-6">{event.teams?.length || 0} teams registered</p>

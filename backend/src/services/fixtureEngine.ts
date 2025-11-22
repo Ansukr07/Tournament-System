@@ -24,87 +24,186 @@ interface BracketNode {
 export class FixtureEngine {
   /**
    * Generates a knockout bracket for the given participants.
-   * - Pads to power of 2 with BYEs.
-   * - Uses standard seeding (1 vs N, 2 vs N-1, etc.).
-   * - Generates matches round by round.
-   * - Handles BYE vs Team auto-advancement (no match doc created).
-   * - Returns the bracket tree and the flat list of matches to save.
+   * NEW ALGORITHM (v2 - Full Bracket Visibility):
+   * - Pads to power of 2 with BYEs
+   * - Uses standard seeding (1 vs N, 2 vs N-1, etc.)
+   * - Creates match documents for ALL bracket slots (including BYE scenarios)
+   * - Uses SEQUENTIAL match numbering for all slots (1, 2, 3...)
+   * - Marks BYE auto-advances with status "auto_advance"
+   * - Real matches marked with status "scheduled"
+   * - Guarantees NO BYE vs BYE matches
    */
   static generateKnockout(participants: IParticipant[], eventId: string): { bracket: BracketNode; matches: (Partial<IMatch> & { _nextMatchNumber?: number })[] } {
     if (participants.length === 0) {
       throw new Error("No participants provided for knockout generation.");
     }
 
-    // 1. Pad to power of 2
+    console.log(`\n===== KNOCKOUT GENERATION (Full Bracket View) =====`);
+    console.log(`Teams: ${participants.length}`);
+
+    // 1. Calculate bracket size (next power of 2)
     const n = participants.length;
     const totalSlots = Math.pow(2, Math.ceil(Math.log2(n)));
+    const byesNeeded = totalSlots - n;
+    console.log(`Bracket size: ${totalSlots} slots (${byesNeeded} byes needed)`);
 
-    // 2. Generate Seeded Order
-    const seedIndices = this.getSeededIndices(totalSlots);
+    // 2. Generate Standard Seeding
+    const seedOrder = this.getSeededIndices(totalSlots);
+    console.log(`Seed order: [${seedOrder.join(', ')}]`);
 
-    const leaves: BracketSource[] = seedIndices.map(seedIndex => {
-      if (seedIndex <= n) {
-        return { type: "team", teamId: participants[seedIndex - 1]._id as mongoose.Types.ObjectId };
+    // 3. Map seeds to participants or BYEs
+    const initialSlots: BracketSource[] = seedOrder.map(seed => {
+      if (seed <= n) {
+        return { type: "team", teamId: participants[seed - 1]._id as mongoose.Types.ObjectId };
       } else {
         return { type: "bye" };
       }
     });
 
-    // 3. Build the bracket bottom-up
-    let currentRoundSources = leaves;
-    let round = 1;
-    let matchCounter = 1; // Global match counter for the bracket slots
-
+    // 4. Build the bracket round by round - CREATE ALL MATCHES
+    let currentRound = 1;
+    let matchCounter = 1; // Sequential counter for ALL matches
     const allMatches: (Partial<IMatch> & { _nextMatchNumber?: number })[] = [];
-    // We need to track the nodes of the *current* round to set them as children of the *next* round.
+
+    // Track bracket structure
+    let currentRoundSlots = initialSlots;
     let previousRoundNodes: BracketNode[] = [];
 
-    // Loop until we have 1 source left (the winner of the tournament)
-    while (currentRoundSources.length > 1) {
-      const nextRoundSources: BracketSource[] = [];
+    console.log(`\n=== Building Complete Bracket ===`);
+
+    while (currentRoundSlots.length > 1) {
+      const nextRoundSlots: BracketSource[] = [];
       const currentLevelNodes: BracketNode[] = [];
 
-      for (let i = 0; i < currentRoundSources.length; i += 2) {
-        const left = currentRoundSources[i];
-        const right = currentRoundSources[i + 1];
+      console.log(`\n--- Round ${currentRound} ---`);
+      console.log(`Processing ${currentRoundSlots.length / 2} pairings...`);
+
+      for (let i = 0; i < currentRoundSlots.length; i += 2) {
+        const left = currentRoundSlots[i];
+        const right = currentRoundSlots[i + 1];
         const currentMatchNumber = matchCounter++;
 
-        // Logic to determine match type
-        let node: BracketNode;
+        // Determine match type
+        const leftIsBye = left.type === "bye";
+        const rightIsBye = right.type === "bye";
 
-        // Case 1: BYE vs BYE
-        if (left.type === "bye" && right.type === "bye") {
+        let node: BracketNode;
+        let matchStatus: "scheduled" | "auto_advance" | "pending" = "scheduled";
+        let advancingSource: BracketSource;
+
+        if (leftIsBye && rightIsBye) {
+          // Case 1: BYE vs BYE (should never happen with proper seeding)
+          console.log(`  Match ${currentMatchNumber}: BYE vs BYE → SKIP (ERROR)`);
+          console.warn(`⚠️  WARNING: BYE vs BYE detected! This should not happen with correct seeding.`);
+
+          // Don't create a match for this
           node = {
             matchNumber: currentMatchNumber,
-            round,
+            round: currentRound,
             source: { type: "bye" },
-            children: this.getChildren(previousRoundNodes, i)
+            children: []
           };
-        }
-        // Case 2: Team/Match vs BYE -> Auto Advance Left
-        else if (right.type === "bye") {
+          nextRoundSlots.push({ type: "bye" });
+          matchCounter--; // Don't count this slot
+
+        } else if (rightIsBye) {
+          // Case 2: Team/Winner vs BYE → Auto-advance left (CREATE AUTO-ADVANCE MATCH)
+          const leftTeamId = left.type === "team" ? left.teamId : null;
+          const leftMatchNum = left.type === "match" ? left.matchNumber : null;
+          const leftDesc = leftTeamId ? `Team(${leftTeamId.toString().slice(-4)})` : `Winner(M${leftMatchNum})`;
+
+          console.log(`  Match ${currentMatchNumber}: ${leftDesc} vs BYE → AUTO-ADVANCE MATCH`);
+
+          matchStatus = "auto_advance";
+          advancingSource = left;
+
+          // Create auto-advance match document
+          const matchDoc: Partial<IMatch> & { _nextMatchNumber?: number } = {
+            eventId: eventId as any,
+            round: currentRound,
+            matchNumber: currentMatchNumber,
+            matchCode: `M${currentMatchNumber}`,
+            status: "auto_advance",
+            participants: [
+              this.createParticipantEntry(left),
+              { placeholder: "BYE" }
+            ]
+          };
+
+          allMatches.push(matchDoc);
+
+          // Link child matches
+          if (left.type === "match") {
+            const childMatch = allMatches.find(m => m.matchNumber === left.matchNumber);
+            if (childMatch) childMatch._nextMatchNumber = currentMatchNumber;
+          }
+
           node = {
             matchNumber: currentMatchNumber,
-            round,
-            source: left, // Pass the left source directly to the next round
-            children: this.getChildren(previousRoundNodes, i)
+            round: currentRound,
+            matchDoc,
+            source: { type: "match", matchNumber: currentMatchNumber },
+            children: []
           };
-        }
-        // Case 3: BYE vs Team/Match -> Auto Advance Right
-        else if (left.type === "bye") {
+          nextRoundSlots.push({ type: "match", matchNumber: currentMatchNumber });
+
+        } else if (leftIsBye) {
+          // Case 3: BYE vs Team/Winner → Auto-advance right (CREATE AUTO-ADVANCE MATCH)
+          const rightTeamId = right.type === "team" ? right.teamId : null;
+          const rightMatchNum = right.type === "match" ? right.matchNumber : null;
+          const rightDesc = rightTeamId ? `Team(${rightTeamId.toString().slice(-4)})` : `Winner(M${rightMatchNum})`;
+
+          console.log(`  Match ${currentMatchNumber}: BYE vs ${rightDesc} → AUTO-ADVANCE MATCH`);
+
+          matchStatus = "auto_advance";
+          advancingSource = right;
+
+          // Create auto-advance match document
+          const matchDoc: Partial<IMatch> & { _nextMatchNumber?: number } = {
+            eventId: eventId as any,
+            round: currentRound,
+            matchNumber: currentMatchNumber,
+            matchCode: `M${currentMatchNumber}`,
+            status: "auto_advance",
+            participants: [
+              { placeholder: "BYE" },
+              this.createParticipantEntry(right)
+            ]
+          };
+
+          allMatches.push(matchDoc);
+
+          // Link child matches
+          if (right.type === "match") {
+            const childMatch = allMatches.find(m => m.matchNumber === right.matchNumber);
+            if (childMatch) childMatch._nextMatchNumber = currentMatchNumber;
+          }
+
           node = {
             matchNumber: currentMatchNumber,
-            round,
-            source: right, // Pass the right source directly to the next round
-            children: this.getChildren(previousRoundNodes, i)
+            round: currentRound,
+            matchDoc,
+            source: { type: "match", matchNumber: currentMatchNumber },
+            children: []
           };
-        }
-        // Case 4: Real Match
-        else {
+          nextRoundSlots.push({ type: "match", matchNumber: currentMatchNumber });
+
+        } else {
+          // Case 4: Real Match (Team/Winner vs Team/Winner)
+          const leftTeamId = left.type === "team" ? left.teamId : null;
+          const leftMatchNum = left.type === "match" ? left.matchNumber : null;
+          const leftDesc = leftTeamId ? `Team(${leftTeamId.toString().slice(-4)})` : `Winner(M${leftMatchNum})`;
+
+          const rightTeamId = right.type === "team" ? right.teamId : null;
+          const rightMatchNum = right.type === "match" ? right.matchNumber : null;
+          const rightDesc = rightTeamId ? `Team(${rightTeamId.toString().slice(-4)})` : `Winner(M${rightMatchNum})`;
+
+          console.log(`  Match ${currentMatchNumber}: ${leftDesc} vs ${rightDesc} → REAL MATCH`);
+
           // Create Match Document
           const matchDoc: Partial<IMatch> & { _nextMatchNumber?: number } = {
             eventId: eventId as any,
-            round,
+            round: currentRound,
             matchNumber: currentMatchNumber,
             matchCode: `M${currentMatchNumber}`,
             status: "scheduled",
@@ -116,13 +215,11 @@ export class FixtureEngine {
 
           allMatches.push(matchDoc);
 
-          // LINKING LOGIC:
-          // If left source is a match, set its _nextMatchNumber to currentMatchNumber
+          // Link child matches to this match
           if (left.type === "match") {
             const childMatch = allMatches.find(m => m.matchNumber === left.matchNumber);
             if (childMatch) childMatch._nextMatchNumber = currentMatchNumber;
           }
-          // If right source is a match, set its _nextMatchNumber to currentMatchNumber
           if (right.type === "match") {
             const childMatch = allMatches.find(m => m.matchNumber === right.matchNumber);
             if (childMatch) childMatch._nextMatchNumber = currentMatchNumber;
@@ -130,25 +227,49 @@ export class FixtureEngine {
 
           node = {
             matchNumber: currentMatchNumber,
-            round,
+            round: currentRound,
             matchDoc,
             source: { type: "match", matchNumber: currentMatchNumber },
-            children: this.getChildren(previousRoundNodes, i)
+            children: []
           };
+
+          nextRoundSlots.push({ type: "match", matchNumber: currentMatchNumber });
         }
 
         currentLevelNodes.push(node);
-        nextRoundSources.push(node.source);
       }
 
       previousRoundNodes = currentLevelNodes;
-      currentRoundSources = nextRoundSources;
-      round++;
+      currentRoundSlots = nextRoundSlots;
+      currentRound++;
     }
 
-    // The root of the bracket is the single node left in previousRoundNodes
-    const root = previousRoundNodes[0];
+    console.log(`\n===== GENERATION COMPLETE =====`);
+    console.log(`Total rounds: ${currentRound - 1}`);
+    console.log(`Total real matches: ${allMatches.length}`);
+    console.log(`Match numbers: ${allMatches.map(m => m.matchNumber).join(', ')}`);
+    console.log(`Expected matches: ${n - 1}`);
 
+    // Validation
+    if (allMatches.length !== n - 1) {
+      console.warn(`⚠️  WARNING: Expected ${n - 1} matches but generated ${allMatches.length}`);
+    }
+
+    // Check for BYE vs BYE in participants
+    const byeVsByeMatches = allMatches.filter(m =>
+      m.participants?.length === 2 &&
+      m.participants[0].placeholder === "BYE" &&
+      m.participants[1].placeholder === "BYE"
+    );
+    if (byeVsByeMatches.length > 0) {
+      console.error(`❌ ERROR: Found ${byeVsByeMatches.length} BYE vs BYE matches!`);
+    } else {
+      console.log(`✅ No BYE vs BYE matches detected`);
+    }
+
+    console.log(`=====================================\n`);
+
+    const root = previousRoundNodes[0];
     return { bracket: root, matches: allMatches };
   }
 

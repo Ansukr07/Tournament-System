@@ -10,7 +10,7 @@ export interface IMatch extends Document {
     courtId?: string;
     startTime?: Date;
     endTime?: Date;
-    status: "scheduled" | "in_progress" | "completed" | "pending";
+    status: "scheduled" | "in_progress" | "completed" | "pending" | "auto_advance";
     winnerId?: mongoose.Types.ObjectId;
     matchCodeId?: mongoose.Types.ObjectId;
     umpireId?: mongoose.Types.ObjectId;
@@ -33,7 +33,7 @@ const MatchSchema: Schema = new Schema({
     endTime: { type: Date },
     status: {
         type: String,
-        enum: ["scheduled", "in_progress", "completed", "pending"],
+        enum: ["scheduled", "in_progress", "completed", "pending", "auto_advance"],
         default: "pending",
     },
     winnerId: { type: Schema.Types.ObjectId, ref: "Team" },

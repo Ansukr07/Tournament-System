@@ -17,6 +17,10 @@ interface BracketMatchProps {
     totalRounds: number
     className?: string
     matchCode?: string
+    status?: string
+    yCenter: number
+    roundStride: number
+    connectorLength: number
 }
 
 export function BracketMatch({
@@ -28,22 +32,44 @@ export function BracketMatch({
     totalRounds,
     className,
     matchCode,
+    status,
+    yCenter,
+    roundStride,
+    connectorLength,
 }: BracketMatchProps) {
     const isFinal = roundIndex === totalRounds - 1
+    const isAutoAdvance = status === "auto_advance"
+
+    // Calculate connector to parent match
+    const parentMatchIndex = Math.floor(matchIndex / 2)
+    const parentRoundStride = roundStride * 2
+    const parentYCenter = (parentMatchIndex * parentRoundStride) + (parentRoundStride / 2) + 40
+    const verticalOffset = parentYCenter - yCenter
 
     return (
         <div className={cn("relative flex flex-col justify-center w-64", className)}>
             {/* Match Code Label */}
             {matchCode && (
                 <div className="absolute -top-6 left-0 w-full text-center">
-                    <span className="text-[10px] font-mono text-muted-foreground bg-background/80 px-2 py-0.5 rounded border border-border">
+                    <span className={cn(
+                        "text-[10px] font-mono px-2 py-0.5 rounded border",
+                        isAutoAdvance
+                            ? "text-muted-foreground/60 bg-muted/30 border-border/30"
+                            : "text-muted-foreground bg-background/80 border-border"
+                    )}>
                         {matchCode}
+                        {isAutoAdvance && " • AUTO"}
                     </span>
                 </div>
             )}
 
             {/* Match Box */}
-            <div className="flex flex-col bg-card border border-border rounded-md overflow-hidden shadow-sm transition-all hover:shadow-md hover:border-accent/50 group">
+            <div className={cn(
+                "flex flex-col rounded-md overflow-hidden shadow-sm transition-all",
+                isAutoAdvance
+                    ? "bg-muted/20 border-2 border-dashed border-border/40"
+                    : "bg-card border border-border hover:shadow-md hover:border-accent/50 group"
+            )}>
                 {/* Team 1 */}
                 <div className={cn(
                     "flex items-center justify-between px-3 py-2 border-b border-border/50 transition-colors",
@@ -56,7 +82,8 @@ export function BracketMatch({
                         <span className={cn(
                             "text-sm truncate font-medium",
                             team1.isWinner ? "text-accent" : "text-foreground",
-                            !team1.name && "text-muted-foreground italic"
+                            !team1.name && "text-muted-foreground italic",
+                            team1.placeholder === "BYE" && "text-muted-foreground/50 font-normal"
                         )}>
                             {team1.name || team1.placeholder || "TBD"}
                         </span>
@@ -78,7 +105,8 @@ export function BracketMatch({
                         <span className={cn(
                             "text-sm truncate font-medium",
                             team2.isWinner ? "text-accent" : "text-foreground",
-                            !team2.name && "text-muted-foreground italic"
+                            !team2.name && "text-muted-foreground italic",
+                            team2.placeholder === "BYE" && "text-muted-foreground/50 font-normal"
                         )}>
                             {team2.name || team2.placeholder || "TBD"}
                         </span>
@@ -89,43 +117,31 @@ export function BracketMatch({
                 </div>
             </div>
 
-            {/* Connectors (Lines) */}
+            {/* Connectors - L-shaped path from this match to parent match */}
             {!isFinal && (
                 <>
-                    {/* Horizontal Line to Right */}
-                    <div className="absolute right-[-20px] top-1/2 w-[20px] h-[2px] bg-border" />
+                    {/* Horizontal line extending right from match center */}
+                    <div
+                        className="absolute bg-border"
+                        style={{
+                            left: '264px',
+                            top: '50px',
+                            width: `${connectorLength}px`,
+                            height: '2px',
+                        }}
+                    />
 
-                    {/* Vertical Connector Logic */}
-                    {/* 
-                        Calculate vertical line height based on round:
-                        - Round 0: connects to match ~60px + 32px (baseGap) away = ~92px
-                        - Round 1: connects to match ~60px + 64px away = ~124px
-                        - Round 2: connects to match ~60px + 128px away = ~188px
-                        Formula: 60px (half match height) + (32 * 2^roundIndex)
-                    */}
-                    {matchIndex % 2 === 0 ? (
-                        // Even match - connect down to next match
-                        <div
-                            className="absolute right-[-22px] top-1/2 w-[2px] bg-border"
-                            style={{
-                                height: `${60 + (32 * Math.pow(2, roundIndex))}px`
-                            }}
-                        />
-                    ) : (
-                        // Odd match - connect up to previous match  
-                        <div
-                            className="absolute right-[-22px] bottom-1/2 w-[2px] bg-border"
-                            style={{
-                                height: `${60 + (32 * Math.pow(2, roundIndex))}px`
-                            }}
-                        />
-                    )}
+                    {/* Vertical line from current level to parent level */}
+                    <div
+                        className="absolute bg-border"
+                        style={{
+                            left: `${264 + connectorLength - 1}px`,
+                            top: verticalOffset >= 0 ? '50px' : `${50 + verticalOffset}px`,
+                            width: '2px',
+                            height: `${Math.abs(verticalOffset)}px`,
+                        }}
+                    />
                 </>
-            )}
-
-            {/* Incoming Connector (Left side) - except for Round 1 */}
-            {roundIndex > 0 && (
-                <div className="absolute left-[-20px] top-1/2 w-[20px] h-[2px] bg-border" />
             )}
         </div>
     )
