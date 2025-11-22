@@ -1,4 +1,4 @@
-const API_BASE = "https://tournament-system-ou4e.onrender.com/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 export const api = {
   // ---------------- AUTH ----------------
   auth: {
