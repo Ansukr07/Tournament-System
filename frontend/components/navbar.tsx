@@ -43,7 +43,7 @@ export function Navbar() {
             <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition">
               About Us
             </Link>
-            <a href="https://drive.google.com/file/d/1pMMS2Oezzi9IuS900d02C9Azqua7uQ4Z/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground transition">
+            <a href="https://drive.google.com/file/d/1el5E2oQJdWjqxz48PGMcSy7PP_sD85bY/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground transition">
               Demo
             </a>
             {token && role === "umpire" && (

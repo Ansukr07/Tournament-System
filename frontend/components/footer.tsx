@@ -31,7 +31,7 @@ export function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <a href="https://drive.google.com/file/d/1pMMS2Oezzi9IuS900d02C9Azqua7uQ4Z/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition">
+                                <a href="https://drive.google.com/file/d/1el5E2oQJdWjqxz48PGMcSy7PP_sD85bY/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition">
                                     Demo
                                 </a>
                             </li>
