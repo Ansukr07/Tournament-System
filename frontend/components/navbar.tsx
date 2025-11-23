@@ -37,6 +37,9 @@ export function Navbar() {
           </Link>
 
           <div className="hidden md:flex gap-6 items-center">
+            <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition">
+              Home
+            </Link>
             <Link href="/events" className="text-sm text-muted-foreground hover:text-foreground transition">
               Events
             </Link>
