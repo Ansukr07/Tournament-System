@@ -8,10 +8,13 @@ import { useEffect, useState } from "react"
 export function Navbar() {
   const router = useRouter()
   const [token, setToken] = useState<string | null>(null)
+  const [role, setRole] = useState<string | null>(null)
 
   useEffect(() => {
     const stored = typeof window !== "undefined" ? localStorage.getItem("token") : null
+    const userRole = typeof window !== "undefined" ? localStorage.getItem("role") : null
     setToken(stored)
+    setRole(userRole)
   }, [])
 
   const handleLogout = () => {
@@ -43,9 +46,19 @@ export function Navbar() {
             <a href="https://drive.google.com/file/d/1pMMS2Oezzi9IuS900d02C9Azqua7uQ4Z/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground transition">
               Demo
             </a>
-            {token && (
+            {token && role === "umpire" && (
+              <Link href="/umpire" className="text-sm text-muted-foreground hover:text-foreground transition">
+                Umpire Dashboard
+              </Link>
+            )}
+            {token && role === "admin" && (
               <Link href="/admin/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition">
                 Admin Dashboard
+              </Link>
+            )}
+            {token && role !== "admin" && role !== "umpire" && (
+              <Link href="/leaderboard" className="text-sm text-muted-foreground hover:text-foreground transition">
+                Leaderboard
               </Link>
             )}
           </div>

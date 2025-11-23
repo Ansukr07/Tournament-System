@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Navbar } from "@/components/navbar"
 import { api } from "@/lib/api"
 
-export default function UmpireScoringPage() {
+function ScoringPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const matchId = searchParams.get("matchId")
@@ -154,8 +154,8 @@ export default function UmpireScoringPage() {
             onClick={() => setSelectedWinner(team1?._id)}
             disabled={!team1}
             className={`p-8 rounded-lg border-2 transition ${selectedWinner === team1?._id
-                ? "border-accent bg-accent/10"
-                : "border-border hover:border-accent/50"
+              ? "border-accent bg-accent/10"
+              : "border-border hover:border-accent/50"
               } ${!team1 ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             <div className="text-center">
@@ -173,8 +173,8 @@ export default function UmpireScoringPage() {
             onClick={() => setSelectedWinner(team2?._id)}
             disabled={!team2}
             className={`p-8 rounded-lg border-2 transition ${selectedWinner === team2?._id
-                ? "border-accent bg-accent/10"
-                : "border-border hover:border-accent/50"
+              ? "border-accent bg-accent/10"
+              : "border-border hover:border-accent/50"
               } ${!team2 ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             <div className="text-center">
@@ -218,5 +218,20 @@ export default function UmpireScoringPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function UmpireScoringPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="max-w-3xl mx-auto px-4 py-12">
+          <p className="text-muted-foreground">Loading match details...</p>
+        </div>
+      </div>
+    }>
+      <ScoringPageContent />
+    </Suspense>
   )
 }
