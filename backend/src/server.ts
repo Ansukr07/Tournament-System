@@ -21,7 +21,10 @@ const io = new Server(server, { cors: { origin: "*" } })
 // ========================================================================
 app.use(
   cors({
-    origin: "http://localhost:3000",   // YOUR FRONTEND URL
+    origin: [
+      "http://localhost:3000",
+      "https://tournament-system-kohl.vercel.app",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
