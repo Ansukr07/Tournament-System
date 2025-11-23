@@ -18,11 +18,18 @@ interface EventWithCount extends Event {
 export default function EventsPage() {
   const [events, setEvents] = useState<EventWithCount[]>([])
   const [loading, setLoading] = useState(true)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState("")
   const [typeFilter, setTypeFilter] = useState<"all" | "knockout" | "round_robin">("all")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
+
+  // Check authentication status
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+    setIsLoggedIn(!!token)
+  }, [])
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -72,6 +79,14 @@ export default function EventsPage() {
 
   const hasActiveFilters = searchTerm !== "" || typeFilter !== "all" || categoryFilter !== "all"
 
+  const handleCreateEvent = () => {
+    if (isLoggedIn) {
+      window.location.href = '/admin/dashboard'
+    } else {
+      window.location.href = '/auth/login'
+    }
+  }
+
   const getTypeColor = (type: string) => {
     return type === "knockout" ? "bg-purple-500/10 text-purple-500" : "bg-blue-500/10 text-blue-500"
   }
@@ -86,7 +101,7 @@ export default function EventsPage() {
             <h1 className="text-4xl font-bold mb-2">Events</h1>
             <p className="text-muted-foreground">Browse and register for tournaments</p>
           </div>
-          <Button onClick={() => window.location.href = '/admin/dashboard'} className="bg-accent hover:bg-accent/90">Create Event</Button>
+          <Button onClick={handleCreateEvent} className="bg-accent hover:bg-accent/90">Create Event</Button>
         </div>
 
         {/* Filter Section */}
@@ -221,7 +236,7 @@ export default function EventsPage() {
             ) : (
               <>
                 <p className="text-muted-foreground mb-4">No events available</p>
-                <Button onClick={() => window.location.href = '/admin/dashboard'} className="bg-accent hover:bg-accent/90">Create First Event</Button>
+                <Button onClick={handleCreateEvent} className="bg-accent hover:bg-accent/90">Create First Event</Button>
               </>
             )}
           </div>
