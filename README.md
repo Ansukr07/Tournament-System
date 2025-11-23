@@ -19,6 +19,18 @@ CourtFlow is a smart tournament automation system that eliminates manual fixture
 * Multi-court scheduling with rest buffers
 * Secure match-code scoring for umpires
 * Live bracket & leaderboard via Socket.IO
+* **Advanced event filtering** with search, type, and category filters
+
+### **Event Filtering System**
+
+The events page includes a comprehensive filtering system to help users quickly find tournaments:
+
+* **🔍 Search Bar** - Search events by name or category in real-time
+* **🏆 Tournament Type Filter** - Filter by Knockout or Round Robin tournaments
+* **📋 Category Filter** - Dropdown showing all unique event categories
+* **🔄 Clear Filters** - One-click button to reset all active filters
+* **📊 Results Counter** - Live count showing "X of Y events" matching your filters
+* **💬 Smart No-Results** - Helpful messages when no events match the criteria
 
 ### **Tech Stack**
 
