@@ -100,6 +100,37 @@ export const verifyMatchCode = async (req: Request, res: Response) => {
   }
 };
 
+// Regenerate match code if expired or lost
+export const regenerateMatchCode = async (req: Request, res: Response) => {
+  try {
+    const matchId = req.params.id;
+    const { umpireId } = req.body;
+
+    // Check if match exists and is not completed
+    const match = await Match.findById(matchId);
+    if (!match) {
+      return res.status(404).json({ message: "Match not found" });
+    }
+
+    if (match.status === "completed") {
+      return res.status(400).json({ message: "Cannot regenerate code for completed match" });
+    }
+
+    // Generate new code (this will delete old codes)
+    const result = await generateMatchCodeForMatch(matchId, umpireId);
+
+    res.json({
+      message: "Match code regenerated successfully",
+      code: result.code,
+      expiresAt: result.expiresAt,
+      matchId: result.match._id,
+      matchNumber: result.match.matchNumber
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: "Error regenerating code", error: error.message });
+  }
+};
+
 export const getMatchById = async (req: Request, res: Response) => {
   try {
     const match = await Match.findById(req.params.id)

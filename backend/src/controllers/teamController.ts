@@ -4,22 +4,67 @@ import Event from "../models/Event";
 import Match from "../models/Match"; // Added Match import
 import mongoose from "mongoose";
 
-// Create a new team
+// Create a new team with comprehensive validation
 export const createTeam = async (req: Request, res: Response) => {
     try {
         const { teamName, clubName, clubId, members, eventId } = req.body;
 
-        // Validate members
+        // ========== VALIDATION 1: Member Check ==========
         if (!members || !Array.isArray(members) || members.length === 0) {
             return res.status(400).json({ error: "Team must have at least one member" });
+        }
+
+        // ========== VALIDATION 2: Duplicate Team Name per Event ==========
+        if (eventId) {
+            const existingTeam = await Team.findOne({
+                teamName: teamName,
+                events: eventId
+            });
+
+            if (existingTeam) {
+                return res.status(400).json({
+                    error: "Team name already exists for this event",
+                    details: `A team named "${teamName}" is already registered for this event`
+                });
+            }
         }
 
         // Generate unique IDs for each member
         const membersWithIds = members.map((member: any) => ({
             ...member,
-            uniqueId: `P-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+            uniqueId: member.uniqueId || `P-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
         }));
 
+        // ========== VALIDATION 3: Duplicate Player IDs within Team ==========
+        const memberIds = membersWithIds.map((m: any) => m.uniqueId);
+        const duplicateIds = memberIds.filter((id: string, index: number) =>
+            memberIds.indexOf(id) !== index
+        );
+
+        if (duplicateIds.length > 0) {
+            return res.status(400).json({
+                error: "Duplicate player IDs found within team",
+                details: `The following player IDs are duplicated: ${duplicateIds.join(', ')}`
+            });
+        }
+
+        // ========== VALIDATION 4: Cross-Team Player Check ==========
+        if (eventId) {
+            const eventTeams = await Team.find({ events: eventId });
+
+            for (const existingTeam of eventTeams) {
+                for (const existingMember of existingTeam.members) {
+                    if (memberIds.includes(existingMember.uniqueId)) {
+                        return res.status(400).json({
+                            error: "Player already registered in another team",
+                            details: `Player ${existingMember.name} (${existingMember.uniqueId}) is already registered in team "${existingTeam.teamName}"`
+                        });
+                    }
+                }
+            }
+        }
+
+        // All validations passed - create the team
         const team = new Team({
             teamName,
             clubName,
@@ -40,6 +85,15 @@ export const createTeam = async (req: Request, res: Response) => {
         res.status(201).json(team);
     } catch (error: any) {
         console.error("Create team error:", error);
+
+        // Handle MongoDB duplicate key errors
+        if (error.code === 11000) {
+            return res.status(400).json({
+                error: "Duplicate entry detected",
+                details: "A team with this information already exists"
+            });
+        }
+
         res.status(500).json({ error: "Failed to create team", message: error.message });
     }
 };

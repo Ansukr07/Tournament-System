@@ -2,6 +2,7 @@ import express from "express";
 import {
     submitScore,
     generateMatchCode,
+    regenerateMatchCode,
     verifyMatchCode,
     getMatchById,
     getAllMatches
@@ -14,6 +15,7 @@ router.get("/", getAllMatches);
 router.get("/:id", getMatchById);
 router.post("/:id/submit-score", submitScore);
 router.post("/:id/generate-code", authMiddleware, generateMatchCode);
+router.post("/:id/regenerate-code", authMiddleware, regenerateMatchCode);
 router.post("/:id/verify-code", verifyMatchCode);
 
 export default router;
