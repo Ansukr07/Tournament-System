@@ -14,7 +14,24 @@
 
 ---
 
-## 🚀 1. Overview
+## � **Demo Credentials**
+
+| Role | Email | Password | Access |
+|------|-------|----------|--------|
+| **Admin** | admin@demo.com | admin123 | Full tournament management, generate match codes |
+| **Umpire** | umpire@demo.com | umpire123 | Verify codes & declare match winners |
+
+### **Role-Based Workflow**
+
+1. **Admin** creates events, generates fixtures, and clicks on matches to generate secure codes
+2. **Umpire** logs in, enters match code, and declares the winner
+3. **Leaderboard** updates in real-time across all dashboards via Socket.IO
+
+> 🔒 Admins cannot declare winners directly - only umpires with valid match codes can submit results
+
+---
+
+## �🚀 1. Overview
 
 CourtFlow is a smart tournament automation system that eliminates manual fixture creation, prevents scheduling conflicts, and updates results in real time. Designed for colleges, clubs, and hackathons, it ensures fairness, efficiency, and complete transparency.
 
