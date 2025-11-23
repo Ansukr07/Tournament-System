@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { BracketMatch } from "./bracket-match"
-import { MatchResultModal } from "../match-result-modal"
+import { AdminMatchCodeModal } from "../admin-match-code-modal"
 
 interface Match {
     id: string
@@ -123,15 +123,13 @@ export function BracketView({ fixtures, onRefresh }: BracketViewProps) {
             </div>
 
             {selectedMatch && selectedMatch.team1._id && selectedMatch.team2._id && (
-                <MatchResultModal
+                <AdminMatchCodeModal
                     isOpen={!!selectedMatch}
                     onClose={() => setSelectedMatch(null)}
                     matchId={selectedMatch.id}
+                    matchNumber={selectedMatch.matchNumber}
                     team1={{ _id: selectedMatch.team1._id, name: selectedMatch.team1.name || "Team 1" }}
                     team2={{ _id: selectedMatch.team2._id, name: selectedMatch.team2.name || "Team 2" }}
-                    onSuccess={() => {
-                        onRefresh?.()
-                    }}
                 />
             )}
         </div>

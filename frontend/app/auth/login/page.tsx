@@ -43,7 +43,11 @@ export default function LoginPage() {
 
       console.log("🎉 Token saved! Redirecting...");
 
-      router.push(result.role === "admin" ? "/admin/dashboard" : "/leaderboard");
+      router.push(
+        result.role === "admin" ? "/admin/dashboard" :
+          result.role === "umpire" ? "/umpire" :
+            "/leaderboard"
+      );
 
     } catch (err: any) {
       console.error("❌ Login failed:", err);
@@ -103,12 +107,22 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 p-4 rounded-lg bg-accent/10 border border-accent/20">
-            <h3 className="text-sm font-semibold mb-2 text-accent">Demo Credentials</h3>
-            <div className="text-xs space-y-1 text-foreground/80">
-              <p><span className="font-medium">Role:</span> Admin</p>
-              <p><span className="font-medium">Email:</span> admin@example.com</p>
-              <p><span className="font-medium">Password:</span> admin123</p>
+          <div className="mt-6 p-4 rounded-lg bg-accent/10 border border-accent
+/20">
+            <h3 className="text-sm font-semibold mb-3 text-accent">Demo Credentials</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Admin Credentials */}
+              <div className="text-xs space-y-1 text-foreground/80">
+                <p className="font-bold text-accent mb-1">Admin</p>
+                <p><span className="font-medium">Email:</span> admin@demo.com</p>
+                <p><span className="font-medium">Password:</span> admin123</p>
+              </div>
+              {/* Umpire Credentials */}
+              <div className="text-xs space-y-1 text-foreground/80">
+                <p className="font-bold text-blue-500 mb-1">Umpire</p>
+                <p><span className="font-medium">Email:</span> umpire@demo.com</p>
+                <p><span className="font-medium">Password:</span> umpire123</p>
+              </div>
             </div>
           </div>
 

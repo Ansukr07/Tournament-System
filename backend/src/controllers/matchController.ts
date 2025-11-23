@@ -168,3 +168,52 @@ export const getAllMatches = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error fetching matches", error: error.message });
   }
 };
+
+// Get match codes for all matches in an event (admin only)
+export const getMatchCodesForEvent = async (req: Request, res: Response) => {
+  try {
+    const { eventId } = req.params;
+
+    // Find all matches for the event
+    const matches = await Match.find({ eventId })
+      .sort({ round: 1, matchNumber: 1 })
+      .select('_id matchNumber matchCode round participants status')
+      .populate('participants.teamId', 'teamName');
+
+    // Find match codes for these matches
+    const matchIds = matches.map(m => m._id);
+    const matchCodes = await MatchCode.find({
+      matchId: { $in: matchIds },
+      used: false
+    });
+
+    // Create a map for quick lookup
+    const codesByMatch = new Map();
+    matchCodes.forEach(code => {
+      codesByMatch.set(code.matchId.toString(), {
+        expiresAt: code.expiresAt,
+        isExpired: code.expiresAt < new Date()
+      });
+    });
+
+    // Combine match info with code details
+    const result = matches.map(match => {
+      const codeInfo = codesByMatch.get(match._id.toString());
+      return {
+        matchId: match._id,
+        matchNumber: match.matchNumber,
+        matchCode: match.matchCode || null, // The plain code (for display)
+        round: match.round,
+        status: match.status,
+        participants: match.participants,
+        codeExpiresAt: codeInfo?.expiresAt || null,
+        isExpired: codeInfo?.isExpired || false,
+        hasCode: !!match.matchCode
+      };
+    });
+
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ message: "Error fetching match codes", error: error.message });
+  }
+};
