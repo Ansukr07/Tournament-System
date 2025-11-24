@@ -2,6 +2,7 @@ import express, { type Express } from "express"
 import cors from "cors"
 import http from "http"
 import { Server } from "socket.io"
+import cron from "node-cron"
 import connectDB from "./config/db"
 import { setupSocket } from "./socket"
 import authRoutes from "./routes/auth"
@@ -72,6 +73,15 @@ app.use("/api/teams", teamRoutes)
 // Start Server
 // ========================================================================
 const PORT = process.env.PORT || 5000
+
+// ========================================================================
+// Cron Job - Prevent Render Idle (pings every 10 minutes)
+// ========================================================================
+cron.schedule('*/10 * * * *', () => {
+  console.log('🔔 Cron ping:', new Date().toISOString())
+})
+
+console.log('✅ Cron job scheduled to ping every 10 minutes')
 
 if (require.main === module) {
   server.listen(PORT, () => {
