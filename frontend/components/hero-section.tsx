@@ -37,11 +37,11 @@ export function HeroSection() {
               </a>
             </div>
           </div>
-          <div className="relative bg-card rounded-lg border border-border p-8 h-80 overflow-hidden">
+          <div className="relative bg-card rounded-lg border border-border p-4 sm:p-8 min-h-[300px] md:h-80 overflow-hidden">
             <img
               src="/abc.jpeg"
               alt="Image"
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-contain md:object-cover p-2"
             />
           </div>
 
