@@ -14,7 +14,7 @@
 
 ---
 
-## � **Demo Credentials**
+##  **Demo Credentials**
 
 | Role | Email | Password | Access |
 |------|-------|----------|--------|
@@ -31,7 +31,7 @@
 
 ---
 
-## �🚀 1. Overview
+## 🚀 1. Overview
 
 CourtFlow is a smart tournament automation system that eliminates manual fixture creation, prevents scheduling conflicts, and updates results in real time. Designed for colleges, clubs, and hackathons, it ensures fairness, efficiency, and complete transparency.
 
